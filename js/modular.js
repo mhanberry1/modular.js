@@ -44,7 +44,7 @@ function modularjs(){
 			}
 		};
 		var moduleName = xhttp.module.getAttribute("name");
-		xhttp.open("GET", "/modules/" + moduleName + "/" + moduleName + ".html", true);
+		xhttp.open("GET", "/modules/" + moduleName + "/index.html", true);
 		xhttp.send();
 	}
 
