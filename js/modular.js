@@ -29,6 +29,7 @@ function modularjs(){
 					var moduleName = this.module.getAttribute("name");
 					var shadowModule = document.createElement("module");
 					shadowModule.id = this.module.id;
+					shadowModule.setAttribute("name", moduleName);
 					shadowModule.innerHTML = adjustPaths(this.responseText, moduleName);
 					applyScripts(shadowModule);
 					applyStyle(shadowModule);
@@ -58,7 +59,7 @@ function modularjs(){
 		var adjustedPaths = paths.map(
 			function(path){
 				// If the path does not reference a network, adjust it
-				if(!path.includes(":\\\\")){
+				if(!path.includes("://")){
 					cleanPath = path.replace(/(\ssrc|\shref|=|"|')/g, "");
 					result = path.replace(/=.*/, '="/modules/' + moduleName + "/" + cleanPath + '"');
 					return result;
@@ -78,14 +79,30 @@ function modularjs(){
 
 	// Format the scripts so that they are isolated to the given module
 	function applyScripts(module){
-		// Returns stringified code that updates the root of the page
-		function updatePathRoot(){
-			return "var document = document;" + 
-				"var window = window;"
-		}
 		var scripts = module.getElementsByTagName("script");
+		// Adjusts window navigation so that relative links become absolute links
+		function adjustNavigation(script){
+			var links = script.match(/window\s*\.\s*(location)\s*((.\s*(assign|reload)\s*\()|=)\s*("\/*[^"]*"|'\/*[^']*')/g);
+			links = (links == null) ? [] : links;
+			for(var i = 0; i < links.length; i++){
+				// If the link does not reference a network, adjust it
+				if(!links[0].includes("://")){
+					var modifiedLink = links[i].match(/("\/*[^"]*"|'\/*[^']*')/g);
+					modifiedLink = (modifiedLink == null) ? [] : modifiedLink;
+					modifiedLink = modifiedLink[0];
+					var coreLink = modifiedLink.substring(1, modifiedLink.length - 1);
+					var hostlessLink = coreLink.replace(/^localhost\//, "");
+					modifiedLink = links[i].replace(coreLink, "/modules/" + module.getAttribute("name") + "/" + hostlessLink);
+					script = script.replace(links[i], modifiedLink);
+				}
+			}
+			return script;
+		}
 		// Iterate through scripts
 		for(var i = 0; i < scripts.length; i++){
+			// Create shadowDocument
+			var shadowDocument = document.implementation.createHTMLDocument(module.id);
+			shadowDocument.body.innerHTML = module.innerHTML;
 			// If the src attribute is defined, get the source file
 			if(scripts[i].src != undefined){
 				var xhttp = new XMLHttpRequest();
@@ -94,14 +111,12 @@ function modularjs(){
 					if(this.readyState == 4){
 						// If the request is successful, load the source code into a function
 						if(this.status == 200){
-							var functionSrc = "function loadSrc(){" + 
-								updatePathRoot() +
-								this.responseText +
-							"}loadSrc();";
-							eval(functionSrc);
+							var functionSrc = adjustNavigation(this.responseText);
+							console.log(functionSrc);
+							var moduleFunc = new Function("module", "document", functionSrc);
+							moduleFunc(module, shadowDocument);
 						// Else, show an alert and throw an error
 						}else{
-							console.log(this.responseText);
 							var errorMessage = "There was an error loading '" + this.srcPath + "'";
 							alert(errorMessage);
 							throw errorMessage;
@@ -113,11 +128,9 @@ function modularjs(){
 				scripts[i].remove();
 			// Else, get the inline code
 			}else{
-				var functionSrc = "function loadSrc(){" +
-					updatePathRoot() +
-					scripts[i].innerHTML +
-				"}";
-				eval(functionSrc);
+				var functionSrc = adjustNavigation(scripts[i].innerText);
+				var moduleFunc = new Function("module", "document", functionSrc);
+				moduleFunc(module, shadowDocument);
 			}
 		}
 	}
@@ -199,7 +212,6 @@ function modularjs(){
 										}
 								}
 							}
-							console.log(modifiedStyle);
 							this.globalStyle.innerHTML += modifiedStyle;
 						// Else, show an alert and throw an error
 						}else{
