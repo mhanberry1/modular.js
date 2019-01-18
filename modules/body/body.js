@@ -1,2 +1,4 @@
 var hello = "Hello, world!";
-window.location.assign("localhost/test.html");
+function helloWorld(){
+	console.log("Hello, world!");
+}
