@@ -33,7 +33,7 @@ var modularjs = {
 						shadowModule.id = this.module.id;
 						shadowModule.setAttribute("name", moduleName);
 						shadowModule.innerHTML = adjustPaths(this.responseText, moduleName);
-						applyScripts(shadowModule);
+						applyScripts(shadowModule, this.module);
 						applyStyle(shadowModule);
 						this.module.innerHTML = shadowModule.innerHTML;
 						// Invoke modularjs.main to take care of nested modules
@@ -79,9 +79,64 @@ var modularjs = {
 			return result;
 		}
 
+		// Extract all function instantiations from the supplied src
+		function extractAllFunctionInstantiations(src){
+			return src.match(/(function\s*[a-zA-Z0-9_]+|[a-zA-Z0-9_]+\s*=\s*function)\s*\([a-zA-Z0-9_,.\[\]\s]*\)/g);
+		}
+
+		// Extract all function invocations from the supplied src
+		function extractAllFunctionInvocations(src){
+			return src.match(/[a-zA-Z0-9_.\[\]]+\s*\([a-zA-Z0-9_,.\[\]\s]*\)/g);
+		}
+
+		// Extract a function name from the supplied function context instantiations or invocations)
+		function extractFunctionName(functionInstantiation){
+			return functionInstantiation.replace(/(( =)?\s*function\s*|\([a-zA-Z0-9_,.\[\]\s]*\))/g, "");
+		}
+
+		// Modifies the scope of all functions embedded in the module's elements' attributes
+		function modifyEmbeddedFunctions(shadowModule, module){
+			// If the module has not been updated yet, proceed with the shadow module
+			if(shadowModule.innerHTML != module.innerHTML){
+				module = shadowModule;
+			}
+			var elements = module.getElementsByTagName("*");
+			// Iterate through elements
+			for(var i = 0; i < elements.length; i++){
+				var element = elements[i];
+				var attributes = element.attributes;
+				// If there are no attributes, continue
+				if(typeof(attributes) == "undefined"){
+					continue;
+				}
+				// Iterate through attributes
+				for(var j = 0; j < attributes.length; j++){
+					var attribute = attributes[j];
+					var functionInvocations = extractAllFunctionInvocations(attribute.value);
+					// If there are no function invocations, continue
+					if(functionInvocations == null){
+						continue;
+					}
+
+					// Iterate through functionInvocations
+					for(var k = 0; k < functionInvocations.length; k++){
+						var invocation = functionInvocations[k];
+						var functionName = extractFunctionName(invocation);
+						// If the function name is not in the list of locally defined functions, continue
+						if(!modularjs.functions[module.id].localFunctionNames.includes(functionName)){
+							continue;
+						}
+						var functionAccessor = `modularjs.functions["${module.id}"].localFunctions["${functionName}"]`
+						var sanitizedInstantiation = invocation.replace(functionName, functionAccessor);
+						element.setAttribute(attribute.name, attribute.value.replace(invocation, sanitizedInstantiation));
+					}
+				}
+			}
+		}
+
 		// Format the scripts so that they are isolated to the given module
-		function applyScripts(module){
-			var scripts = module.getElementsByTagName("script");
+		function applyScripts(shadowModule, module){
+			var scripts = shadowModule.getElementsByTagName("script");
 			// Adjusts window navigation so that relative links become absolute links
 			function adjustNavigation(script){
 				var links = script.match(/window\s*\.\s*(location)\s*((.\s*(assign|reload)\s*\()|=)\s*("\/*[^"]*"|'\/*[^']*')/g);
@@ -94,28 +149,86 @@ var modularjs = {
 						modifiedLink = modifiedLink[0];
 						var coreLink = modifiedLink.substring(1, modifiedLink.length - 1);
 						var hostlessLink = coreLink.replace(/^localhost\//, "");
-						modifiedLink = links[i].replace(coreLink, "/modules/" + module.getAttribute("name") + "/" + hostlessLink);
+						modifiedLink = links[i].replace(coreLink, "/shadowModules/" + module.getAttribute("name") + "/" + hostlessLink);
 						script = script.replace(links[i], modifiedLink);
 					}
 				}
 				return script;
 			}
+			// Constructs and executes the function
+			function constructFunc(){
+				// If there are no empty slots, construct the function
+				if(!(--functionSrc.emptySlots)){
+					modularjs.functions[shadowModule.id] = {};
+					functionSrc = functionSrc.join("\n");
+					var functionNames = getLocalFunctionNames();
+					// If there are local functions defined in functionSrc, store their names for later and append code to functionSrc to return them
+					if(functionNames != null){
+						functionSrc += "\n" + returnLocalFunctions(functionNames);
+						modularjs.functions[shadowModule.id].localFunctionNames = functionNames;
+					}
+					var moduleFunc = new Function("module", "document", functionSrc);
+					var localFunctions = moduleFunc(module, shadowDocument);
+					storeLocalFunctions(localFunctions);
+					modularjs.functions[shadowModule.id].main = moduleFunc;
+					modifyEmbeddedFunctions(shadowModule, module);
+				}
+			}
+			// Returns functions defined locally in functionSrc
+			function getLocalFunctionNames(){
+				var functions = extractAllFunctionInstantiations(functionSrc);
+				// If there are functions defined in functionSrc, extract their names
+				if(functions != null){
+					functions = functions.map(
+						extractFunctionName
+					);
+				}
+				return functions;
+			}
+			// Generates code to append to functionSrc that returns functions defined locally
+			function returnLocalFunctions(functionNames){
+				var result = "// Return locally defined functions\n" +
+				"return {";
+				// Iterate through functionNames
+				for(var i = 0; i < functionNames.length; i++){
+					result += `"${functionNames[i]}":${functionNames[i]}`;
+					// If it is not the last iteration, add a comma
+					if(i != functionNames.length - 1){
+						result += ",";
+					}
+				}
+				result += "};";
+				return result;
+			}
+			// Store local functions in modularjs
+			function storeLocalFunctions(localFunctions){
+				// If the localFunctions variable is undefined, return
+				if(typeof(localFunctions) == "undefined"){
+					return;
+				}
+				modularjs.functions[shadowModule.id].localFunctions = {};
+				for(var functionName in localFunctions){
+					modularjs.functions[shadowModule.id].localFunctions[functionName] = localFunctions[functionName];
+				}
+			}
 			// Iterate through scripts and construct functionSrc
-			var functionSrc = "";
+			var functionSrc = new Array(scripts.length);
+			functionSrc.emptySlots = functionSrc.length;
 			for(var i = 0; i < scripts.length; i++){
 				// Create shadowDocument
-				var shadowDocument = document.implementation.createHTMLDocument(module.id);
-				shadowDocument.body.innerHTML = module.innerHTML;
+				var shadowDocument = document.implementation.createHTMLDocument(shadowModule.id);
+				shadowDocument.body.innerHTML = shadowModule.innerHTML;
 				// If the src attribute is defined, get the source file
 				if(scripts[i].src != undefined){
 					var xhttp = new XMLHttpRequest();
+					xhttp.index = i;
 					xhttp.srcPath = scripts[i].src;
 					xhttp.onreadystatechange = function(){
 						if(this.readyState == 4){
 							// If the request is successful, load the source code into a function
 							if(this.status == 200){
-								functionSrc += "\n" + adjustNavigation(this.responseText);
-								console.log(functionSrc);
+								functionSrc[i] = adjustNavigation(this.responseText);
+								constructFunc();
 							// Else, show an alert and throw an error
 							}else{
 								var errorMessage = "There was an error loading '" + this.srcPath + "'";
@@ -126,17 +239,13 @@ var modularjs = {
 					};
 					xhttp.open("GET", scripts[i].src, true);
 					xhttp.send();
-					scripts[i].remove();
 				// Else, get the inline code
 				}else{
-					functionSrc += "\n" + adjustNavigation(scripts[i].innerText);
+					functionSrc[i] = adjustNavigation(scripts[i].innerText);
+					constructFunc();
 				}
+				scripts[i].remove();
 			}
-			// Construct and execute function
-			console.log(functionSrc);
-			var moduleFunc = new Function("module", "document", functionSrc);
-			moduleFunc(module, shadowDocument);
-			modularjs.functions[module.id] = moduleFunc;
 		}
 
 		// Apply the style so that it is isolated to the given module
@@ -233,11 +342,6 @@ var modularjs = {
 					globalStyle.innerHTML += styles[i].innerHTML;
 				}
 			}
-		}
-
-		// Modify the scope of all functions embedded in the module
-		function modifyEmbeddedFunctions(module){
-			 
 		}
 	}
 }
