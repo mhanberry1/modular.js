@@ -1,4 +1,18 @@
 var modularjs = {
+	// Syncs a modules contents with the corresponding shadowModule
+	"syncModules" : function(module){
+		// Ascend the DOM until the first parent module is found
+		if(module.tagName.toLowerCase() != "module"){
+			modularjs.syncModules(module.parentElement);
+			return;
+		}
+		// If there is nothing to update, return
+		if(module.innerHTML == modularjs.shadowModules[module.id].innerHTML){
+			return;
+		}
+		module.innerHTML = modularjs.shadowModules[module.id].innerHTML;
+	},
+	"shadowModules" : {},
 	"functions" : {},
 	"main" : function(){
 		// Keep track of module numbers for asynchrous operations
@@ -35,6 +49,7 @@ var modularjs = {
 						shadowModule.innerHTML = adjustPaths(this.responseText, moduleName);
 						applyScripts(shadowModule, this.module);
 						applyStyle(shadowModule);
+						modularjs.shadowModules[this.module.id] = shadowModule;
 						this.module.innerHTML = shadowModule.innerHTML;
 						// Invoke modularjs.main to take care of nested modules
 						modularjs.main();
@@ -93,14 +108,10 @@ var modularjs = {
 		function extractFunctionName(functionInstantiation){
 			return functionInstantiation.replace(/(( =)?\s*function\s*|\([a-zA-Z0-9_,.\[\]\s]*\))/g, "");
 		}
-
+		
 		// Modifies the scope of all functions embedded in the module's elements' attributes
 		function modifyEmbeddedFunctions(shadowModule, module){
-			// If the module has not been updated yet, proceed with the shadow module
-			if(shadowModule.innerHTML != module.innerHTML){
-				module = shadowModule;
-			}
-			var elements = module.getElementsByTagName("*");
+			var elements = shadowModule.getElementsByTagName("*");
 			// Iterate through elements
 			for(var i = 0; i < elements.length; i++){
 				var element = elements[i];
@@ -123,15 +134,16 @@ var modularjs = {
 						var invocation = functionInvocations[k];
 						var functionName = extractFunctionName(invocation);
 						// If the function name is not in the list of locally defined functions, continue
-						if(!modularjs.functions[module.id].localFunctionNames.includes(functionName)){
+						if(!modularjs.functions[shadowModule.id].localFunctionNames.includes(functionName)){
 							continue;
 						}
-						var functionAccessor = `modularjs.functions["${module.id}"].localFunctions["${functionName}"]`
-						var sanitizedInstantiation = invocation.replace(functionName, functionAccessor);
+						var functionAccessor = `modularjs.functions["${shadowModule.id}"].localFunctions["${functionName}"]`
+						var sanitizedInstantiation = invocation.replace(functionName, functionAccessor) + "; modularjs.syncModules(this);";
 						element.setAttribute(attribute.name, attribute.value.replace(invocation, sanitizedInstantiation));
 					}
 				}
 			}
+			module.innerHTML = shadowModule.innerHTML;
 		}
 
 		// Format the scripts so that they are isolated to the given module
@@ -214,10 +226,12 @@ var modularjs = {
 			// Iterate through scripts and construct functionSrc
 			var functionSrc = new Array(scripts.length);
 			functionSrc.emptySlots = functionSrc.length;
+			// Create shadowDocument
+			var shadowDocument = document.implementation.createHTMLDocument(shadowModule.id);
+			shadowDocument.body.setAttribute("id", shadowModule.id);
+			shadowDocument.body.setAttribute("name", shadowModule.getAttribute("name"));
+			shadowDocument.body.appendChild(shadowModule);
 			for(var i = 0; i < scripts.length; i++){
-				// Create shadowDocument
-				var shadowDocument = document.implementation.createHTMLDocument(shadowModule.id);
-				shadowDocument.body.innerHTML = shadowModule.innerHTML;
 				// If the src attribute is defined, get the source file
 				if(scripts[i].src != undefined){
 					var xhttp = new XMLHttpRequest();
