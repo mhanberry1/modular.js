@@ -284,6 +284,56 @@ var modularjs = {
 					styles.push(links[i]);
 				}
 			}
+			// Confines the style to the module
+			function confineStyle(styleSource, moduleId){
+				var flags = {
+					"{" : [],
+					'"' : false,
+					"moduleId" : false
+				}
+				// Iterate through styleSource
+				for(var i = 0; i < styleSource.length; i++){
+					switch(styleSource[i]){
+						case '"':
+							flags['"'] = !flags['"'];
+							flags["moduleId"] = true;
+							break;
+						case "{":
+							// If the " flag is false, push "{" to the stack
+							if(!flags['"']){
+								flags["{"].push("{");
+							}
+							flags["moduleId"] = true;
+							break;
+						case "}":
+							// If the " flag is false, pop an element from the stack
+							if(!flags['"']){
+								flags["{"].pop();
+							}
+							// If the stack is empty, set the moduleId to false
+							if(flags["{"].length == 0){
+								flags["moduleId"] = false;
+							}
+							break;
+						case ",":
+							// If the { and " flags are empty/false, toggle the module flag
+							if(flags["{"].length == 0 && !flags['"']){
+								flags["moduleId"] = !flags["moduleId"];
+							}
+						default:
+							// If the moduleId flag is false and the current character is not whitespace, insert the module id
+							if(!flags["moduleId"] && !styleSource[i].match(/\s/g)){
+								styleSource = styleSource.slice(0, i) + " #" + moduleId + " " + styleSource.slice(i);
+								flags["moduleId"] = !flags["moduleId"];
+							}
+					}
+				}
+				// Remove "body" selectors and return
+				styleSource = styleSource.replace(/\s+body\s+/g, "");
+				styleSource = styleSource.replace(/\s+body{/g, "{");
+				console.log(styleSource);
+				return styleSource;
+			}
 			// Iterate through styles
 			for(var i = 0; i < styles.length; i++){
 				// If the src attribute is defined, get the source file
@@ -296,50 +346,7 @@ var modularjs = {
 						if(this.readyState == 4){
 							// If the request is successful, add the source code to globalStyle
 							if(this.status == 200){
-								var flags = {
-									"{" : [],
-									'"' : false,
-									"moduleId" : false
-								}
-								var modifiedStyle = this.responseText
-								// Iterate through modifiedStyle
-								for(var i = 0; i < modifiedStyle.length; i++){
-									switch(modifiedStyle[i]){
-										case '"':
-											flags['"'] = !flags['"'];
-											flags["moduleId"] = true;
-											break;
-										case "{":
-											// If the " flag is false, push "{" to the stack
-											if(!flags['"']){
-												flags["{"].push("{");
-											}
-											flags["moduleId"] = true;
-											break;
-										case "}":
-											// If the " flag is false, pop an element from the stack
-											if(!flags['"']){
-												flags["{"].pop();
-											}
-											// If the stack is empty, set the moduleId to false
-											if(flags["{"].length == 0){
-												flags["moduleId"] = false;
-											}
-											break;
-										case ",":
-											// If the { and " flags are empty/false, toggle the module flag
-											if(flags["{"].length == 0 && !flags['"']){
-												flags["moduleId"] = !flags["moduleId"];
-											}
-										default:
-											// If the moduleId flag is false and the current character is not whitespace, insert the module id
-											if(!flags["moduleId"] && !modifiedStyle[i].match(/\s/g)){
-												modifiedStyle = modifiedStyle.slice(0, i) + " #" + this.moduleId + " " + modifiedStyle.slice(i);
-												flags["moduleId"] = !flags["moduleId"]
-											}
-									}
-								}
-								this.globalStyle.innerHTML += modifiedStyle;
+								this.globalStyle.innerHTML += confineStyle(this.responseText, this.moduleId);
 							// Else, show an alert and throw an error
 							}else{
 								var errorMessage = "There was an error loading '" + this.hrefPath + "'";
@@ -353,7 +360,7 @@ var modularjs = {
 					styles[i].remove();
 				// Else, get the inline code
 				}else{
-					globalStyle.innerHTML += styles[i].innerHTML;
+					globalStyle.innerHTML += confineStyle(styles[i].innerHTML, module.id);
 				}
 			}
 		}
