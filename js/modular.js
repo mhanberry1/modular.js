@@ -37,6 +37,13 @@ var modularjs = {
 			// Get module documents
 			var xhttp = new XMLHttpRequest();
 			xhttp.module = untouchedModules[i];
+			console.log(xhttp.module.innerHTML);
+			// If the module is empty, xhttp.modularJSON = {}
+			if(xhttp.module.innerHTML.replace(/\s+/, "") == ""){
+				xhttp.modularJSON = {};
+			}else{
+				xhttp.modularJSON = JSON.parse(xhttp.module.innerHTML);
+			}
 			xhttp.onreadystatechange = function(){
 				if(this.readyState == 4){
 					// If the call is successful, render the module to the page
@@ -46,7 +53,10 @@ var modularjs = {
 						var shadowModule = document.createElement("module");
 						shadowModule.id = this.module.id;
 						shadowModule.setAttribute("name", moduleName);
-						shadowModule.innerHTML = adjustPaths(this.responseText, moduleName);
+						shadowModule.innerHTML = injectModularJSON(
+							adjustPaths(this.responseText, moduleName),
+							this.modularJSON
+						);
 						applyScripts(shadowModule, this.module);
 						applyStyle(shadowModule);
 						modularjs.shadowModules[this.module.id] = shadowModule;
@@ -92,6 +102,19 @@ var modularjs = {
 				result = result.replace(paths[i], adjustedPaths[i]);
 			}
 			return result;
+		}
+
+		// Interpret values incapsulated in "{{ }}"
+		function injectModularJSON(source, modularJSON){
+			var values = source.match(/{{.*}}/g);
+			// If "values" is not null, terate through values and inject values from modularJSON
+			if(values != null){
+				for(var i = 0; i < values.length; i++){
+					var key = values[i].replace(/({{|}})/g, "");
+					source = source.replace(values[i], modularJSON[key]);
+				}
+			}
+			return source;
 		}
 
 		// Extract all function instantiations from the supplied src
