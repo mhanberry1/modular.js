@@ -12,6 +12,17 @@ var modularjs = {
 		}
 		module.innerHTML = modularjs.shadowModules[module.id].innerHTML;
 	},
+	"newModule" : function(name, modularJSON){
+		var module = document.createElement("module");
+		module.setAttribute("name", name);
+		module.innerHTML = JSON.stringify(modularJSON);
+		module.style.display = "none";
+		document.body.appendChild(module);
+		modularjs.main();
+		document.body.removeChild(module);
+		module.removeAttribute("style");
+		return module;
+	},
 	"shadowModules" : {},
 	"functions" : {},
 	"main" : function(){
@@ -26,6 +37,9 @@ var modularjs = {
 			if(modules[i].getAttribute("touched") != "true"){
 				untouchedModules.push(modules[i]);
 				modules[i].setAttribute("touched", "true");
+			// Else, increment moduleNumber
+			}else{
+				moduleNumber++;
 			}
 		}
 		// If there are no untouched modules, return
@@ -37,7 +51,6 @@ var modularjs = {
 			// Get module documents
 			var xhttp = new XMLHttpRequest();
 			xhttp.module = untouchedModules[i];
-			console.log(xhttp.module.innerHTML);
 			// If the module is empty, xhttp.modularJSON = {}
 			if(xhttp.module.innerHTML.replace(/\s+/, "") == ""){
 				xhttp.modularJSON = {};
@@ -354,7 +367,6 @@ var modularjs = {
 				// Remove "body" selectors and return
 				styleSource = styleSource.replace(/\s+body\s+/g, "");
 				styleSource = styleSource.replace(/\s+body{/g, "{");
-				console.log(styleSource);
 				return styleSource;
 			}
 			// Iterate through styles
