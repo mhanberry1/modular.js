@@ -327,6 +327,8 @@ var modularjs = {
 					'"' : false,
 					"moduleId" : false
 				}
+				// Remove comments
+				styleSource = styleSource.replace(/\/\*((?!\*\/)[\s\S])*\*\//g, "");
 				// Iterate through styleSource
 				for(var i = 0; i < styleSource.length; i++){
 					switch(styleSource[i]){
@@ -357,16 +359,18 @@ var modularjs = {
 								flags["moduleId"] = !flags["moduleId"];
 							}
 						default:
-							// If the moduleId flag is false and the current character is not whitespace, insert the module id
-							if(!flags["moduleId"] && !styleSource[i].match(/\s/g)){
-								styleSource = styleSource.slice(0, i) + " #" + moduleId + " " + styleSource.slice(i);
+							// If the moduleId flag is false and the current character is not whitespace or a comma, insert the module id
+							if(!flags["moduleId"] && !styleSource[i].match(/(\s|,)/g)){
+								styleSource = [styleSource.slice(0, i), "#" + moduleId, styleSource.slice(i)].join(" ");
 								flags["moduleId"] = !flags["moduleId"];
 							}
 					}
 				}
-				// Remove "body" selectors and return
+				// Remove "body" and "html" selectors and return
 				styleSource = styleSource.replace(/\s+body\s+/g, "");
 				styleSource = styleSource.replace(/\s+body{/g, "{");
+				styleSource = styleSource.replace(/\s+html\s+/g, "");
+				styleSource = styleSource.replace(/\s+html{/g, "{");
 				return styleSource;
 			}
 			// Iterate through styles

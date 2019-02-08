@@ -2,17 +2,22 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<link rel="stylesheet/css" src="css/index.css">
+		<link rel="stylesheet" type="text/css" href="css/index.css">
+		<link rel="stylesheet" type="text/css" href="css/eForm.css">
 	</head>
 	<body>
-		<module name="navbar"></module>
-		<module name="body">
+		<module name="section">
 			{
-				"message" : "Yo!"
+				"header" : "What is modular.js?",
+				"content" : "Simply put, modular.js is an easier way to develop your website. It allows you to design individual components (modules) on your site without having them interfere with each other. Modules created using modular.js are completely re-usable without the need to copy and paste the same code over and over. Moreover, modular.js is easy to understand and does not require you to learn any new syntax. It is designed to stay out of the way, so feel free to use any framework alongside it -- Although it greatly reduces the need for large frameworks like angular.js. modular.js lets you develop modules as if they are self-contained websites and then augment their functionality when they are used in another document."
 			}
 		</module>
-		<module name="body2"></module>
-		<module name="footer"></module>
+		<module name="section">
+			{
+				"header" : "How do I use it?",
+				"content" : "Using modular.js couldn't be simpler. All you have to do is include the modular.js file after the body of your top-level document, and you're ready to go! You can reference any modules that are stored in the modules directory by name like so: &lt;module name=\"section\"&gt;&lt;/module&gt;."
+			}
+		</module>
 	</body>
 	<script src="js/modular.js"></script>
 </html>
