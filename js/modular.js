@@ -23,6 +23,7 @@ var modularjs = {
 		module.removeAttribute("style");
 		return module;
 	},
+	"mainDoc" : document,
 	"shadowModules" : {},
 	"functions" : {},
 	"main" : function(){
