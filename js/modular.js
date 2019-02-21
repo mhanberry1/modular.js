@@ -216,7 +216,7 @@ var modularjs = {
 						functionSrc += "\n" + returnLocalFunctions(functionNames);
 					}
 					var moduleFunc = new Function("module", "document", functionSrc);
-					var localFunctions = moduleFunc(module, shadowDocument);
+					var localFunctions = moduleFunc(module, shadowDocument, );
 					// If localFunctions is not undefined, store the local function names
 					if(localFunctions != undefined){
 						modularjs.functions[shadowModule.id].localFunctionNames = Object.keys(localFunctions);
@@ -266,14 +266,16 @@ var modularjs = {
 					modularjs.functions[shadowModule.id].localFunctions[functionName] = localFunctions[functionName];
 				}
 			}
-			// Iterate through scripts and construct functionSrc
-			var functionSrc = new Array(scripts.length);
-			functionSrc.emptySlots = functionSrc.length;
 			// Create shadowDocument
 			var shadowDocument = document.implementation.createHTMLDocument(shadowModule.id);
 			shadowDocument.body.setAttribute("id", shadowModule.id);
 			shadowDocument.body.setAttribute("name", shadowModule.getAttribute("name"));
 			shadowDocument.body.appendChild(shadowModule);
+			// Set the parent
+			shadowDocument.parent = module.getRootNode();
+			// Iterate through scripts and construct functionSrc
+			var functionSrc = new Array(scripts.length);
+			functionSrc.emptySlots = functionSrc.length;
 			for(var i = 0; i < scripts.length; i++){
 				// If the src attribute is defined, get the source file
 				if(scripts[i].src != undefined){
