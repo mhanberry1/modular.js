@@ -75,6 +75,7 @@ var modularjs = {
 						applyStyle(shadowModule);
 						modularjs.shadowModules[this.module.id] = shadowModule;
 						this.module.innerHTML = shadowModule.innerHTML;
+						applyMutationObserver(shadowModule, this.module);
 						// Invoke modularjs.main to take care of nested modules
 						modularjs.main();
 					// Else, show an alert and throw an error
@@ -175,7 +176,8 @@ var modularjs = {
 							continue;
 						}
 						var functionAccessor = `modularjs.functions["${shadowModule.id}"].localFunctions["${functionName}"]`
-						var sanitizedInstantiation = invocation.replace(functionName, functionAccessor) + "; modularjs.syncModules(this);";
+						//var sanitizedInstantiation = invocation.replace(functionName, functionAccessor) + "; modularjs.syncModules(this);";
+						var sanitizedInstantiation = invocation.replace(functionName, functionAccessor);
 						element.setAttribute(attribute.name, attribute.value.replace(invocation, sanitizedInstantiation));
 					}
 				}
@@ -411,6 +413,23 @@ var modularjs = {
 					globalStyle.innerHTML += confineStyle(styles[i].innerHTML, module.id);
 				}
 			}
+		}
+
+		// Apply a mutation observer to the supplied module
+		function applyMutationObserver(shadowModule, module){
+			var config = {
+				"attributes" : true,
+				"childList" : true,
+				"subtree" : true
+			};
+
+			// Syncs the module with its corresponding shadowModule
+			function callback(mutations){
+				modularjs.syncModules(module);
+			}
+
+			var observer = new MutationObserver(callback);
+			observer.observe(shadowModule, config);
 		}
 	}
 }
