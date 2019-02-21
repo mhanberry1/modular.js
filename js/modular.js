@@ -132,17 +132,17 @@ var modularjs = {
 
 		// Extract all function instantiations from the supplied src
 		function extractAllFunctionInstantiations(src){
-			return src.match(/(function\s*[a-zA-Z0-9_]+|[a-zA-Z0-9_]+\s*=\s*function)\s*\([a-zA-Z0-9_,.\[\]\s]*\)/g);
+			return src.match(/(function\s*[a-zA-Z0-9_]+|[a-zA-Z0-9_.]+\s*=\s*function)\s*\([a-zA-Z0-9_,.\[\]\s]*\)/g);
 		}
 
 		// Extract all function invocations from the supplied src
 		function extractAllFunctionInvocations(src){
-			return src.match(/[a-zA-Z0-9_.\[\]]+\s*\([a-zA-Z0-9_,.\[\]\s]*\)/g);
+			return src.match(/[a-zA-Z0-9_.\[\]]+\s*\(([a-zA-Z0-9_,.\[\]\s]*|\\\(|\\\)|'.*'(,\s*('.*'|".*"))*|".*"(,\s*('.*'|".*"))*)\)/g);
 		}
 
 		// Extract a function name from the supplied function context instantiations or invocations)
 		function extractFunctionName(functionInstantiation){
-			return functionInstantiation.replace(/(( =)?\s*function\s*|\([a-zA-Z0-9_,.\[\]\s]*\))/g, "");
+			return functionInstantiation.replace(/(( =)?\s*function\s*|\(.*\))/g, "");
 		}
 		
 		// Modifies the scope of all functions embedded in the module's elements' attributes
@@ -213,10 +213,16 @@ var modularjs = {
 					// If there are local functions defined in functionSrc, store their names for later and append code to functionSrc to return them
 					if(functionNames != null){
 						functionSrc += "\n" + returnLocalFunctions(functionNames);
-						modularjs.functions[shadowModule.id].localFunctionNames = functionNames;
 					}
 					var moduleFunc = new Function("module", "document", functionSrc);
 					var localFunctions = moduleFunc(module, shadowDocument);
+					// If localFunctions is not undefined, store the local function names
+					if(localFunctions != undefined){
+						modularjs.functions[shadowModule.id].localFunctionNames = Object.keys(localFunctions);
+					// Else, store an empty  array
+					}else{
+						modularjs.functions[shadowModule.id].localFunctionNames = [];
+					}
 					storeLocalFunctions(localFunctions);
 					modularjs.functions[shadowModule.id].main = moduleFunc;
 					modifyEmbeddedFunctions(shadowModule, module);
@@ -236,16 +242,16 @@ var modularjs = {
 			// Generates code to append to functionSrc that returns functions defined locally
 			function returnLocalFunctions(functionNames){
 				var result = "// Return locally defined functions\n" +
-				"return {";
+				"var localFunctions = {};\n\n";
 				// Iterate through functionNames
 				for(var i = 0; i < functionNames.length; i++){
-					result += `"${functionNames[i]}":${functionNames[i]}`;
-					// If it is not the last iteration, add a comma
-					if(i != functionNames.length - 1){
-						result += ",";
-					}
+					result += "try{\n" +
+						"\tlocalFunctions['" + functionNames[i] + "'] = " + functionNames[i] + ";\n" +
+					"}catch{\n" +
+					"\tconsole.warn(\"The function '" + functionNames[i] + "' was not defined in the current scope, so it will not be returned.\");" +
+					"}\n\n";
 				}
-				result += "};";
+				result += "return localFunctions;";
 				return result;
 			}
 			// Store local functions in modularjs
