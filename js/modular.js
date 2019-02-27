@@ -101,7 +101,7 @@ var modularjs = {
 			var adjustedPaths = paths.map(
 				function(path){
 					// If the path does not reference a network, adjust it
-					if(!path.includes("://")){
+					if(!path.indexOf("://") != -1){
 						cleanPath = path.replace(/(\ssrc|\shref|=|"|')/g, "");
 						result = path.replace(/=.*/, '="/modules/' + moduleName + "/" + cleanPath + '"');
 						return result;
@@ -172,10 +172,10 @@ var modularjs = {
 						var invocation = functionInvocations[k];
 						var functionName = extractFunctionName(invocation);
 						// If the function name is not in the list of locally defined functions, continue
-						if(!modularjs.functions[shadowModule.id].localFunctionNames.includes(functionName)){
+						if(modularjs.functions[shadowModule.id].localFunctionNames.indexOf(functionName) == -1){
 							continue;
 						}
-						var functionAccessor = `modularjs.functions["${shadowModule.id}"].localFunctions["${functionName}"]`
+						var functionAccessor = "modularjs.functions['" + shadowModule.id + "'].localFunctions['" + functionName + "']";
 						//var sanitizedInstantiation = invocation.replace(functionName, functionAccessor) + "; modularjs.syncModules(this);";
 						var sanitizedInstantiation = invocation.replace(functionName, functionAccessor);
 						element.setAttribute(attribute.name, attribute.value.replace(invocation, sanitizedInstantiation));
@@ -194,7 +194,7 @@ var modularjs = {
 				links = (links == null) ? [] : links;
 				for(var i = 0; i < links.length; i++){
 					// If the link does not reference a network, adjust it
-					if(!links[0].includes("://")){
+					if(links[0].indexOf("://") == -1){
 						var modifiedLink = links[i].match(/("\/*[^"]*"|'\/*[^']*')/g);
 						modifiedLink = (modifiedLink == null) ? [] : modifiedLink;
 						modifiedLink = modifiedLink[0];
@@ -217,8 +217,9 @@ var modularjs = {
 					if(functionNames != null){
 						functionSrc += "\n" + returnLocalFunctions(functionNames);
 					}
+					eval("function test(module, document){" + functionSrc + "}");
 					var moduleFunc = new Function("module", "document", functionSrc);
-					var localFunctions = moduleFunc(module, shadowDocument, );
+					var localFunctions = moduleFunc(module, shadowDocument);
 					// If localFunctions is not undefined, store the local function names
 					if(localFunctions != undefined){
 						modularjs.functions[shadowModule.id].localFunctionNames = Object.keys(localFunctions);
@@ -250,8 +251,8 @@ var modularjs = {
 				for(var i = 0; i < functionNames.length; i++){
 					result += "try{\n" +
 						"\tlocalFunctions['" + functionNames[i] + "'] = " + functionNames[i] + ";\n" +
-					"}catch{\n" +
-					"\tconsole.warn(\"The function '" + functionNames[i] + "' was not defined in the current scope, so it will not be returned.\");" +
+					"}catch(error){\n" +
+					"\tconsole.warn(\"The function '" + functionNames[i] + "' was not defined in the current scope, so it will not be returned.\");\n" +
 					"}\n\n";
 				}
 				result += "return localFunctions;";
@@ -274,8 +275,22 @@ var modularjs = {
 			shadowDocument.body.setAttribute("name", shadowModule.getAttribute("name"));
 			shadowDocument.body.appendChild(shadowModule);
 			// Set the parent
-			shadowDocument.parent = module.getRootNode();
+			if(module.getRootNode != undefined){
+				shadowDocument.parent = module.getRootNode();
+			}else{
+				function getRootNode(node){
+					// If the node is a document, return the node
+					if(node.toString().indexOf("HTMLDocument") != -1){
+						return node;
+					// Else, inspect parent node
+					}else{
+						return getRootNode(node.parentNode);
+					}
+				}
+				shadowDocument.parent = getRootNode(module);
+			}
 			// Iterate through scripts and construct functionSrc
+			var scripts = shadowModule.getElementsByTagName("script");
 			var functionSrc = new Array(scripts.length);
 			functionSrc.emptySlots = functionSrc.length;
 			for(var i = 0; i < scripts.length; i++){
@@ -288,7 +303,7 @@ var modularjs = {
 						if(this.readyState == 4){
 							// If the request is successful, load the source code into a function
 							if(this.status == 200){
-								functionSrc[i] = adjustNavigation(this.responseText);
+								functionSrc[this.index] = adjustNavigation(this.responseText);
 								constructFunc();
 							// Else, show an alert and throw an error
 							}else{
@@ -305,7 +320,7 @@ var modularjs = {
 					functionSrc[i] = adjustNavigation(scripts[i].innerText);
 					constructFunc();
 				}
-				scripts[i].remove();
+				scripts[i].parentNode.removeChild(scripts[i]);
 			}
 		}
 
@@ -319,15 +334,20 @@ var modularjs = {
 				globalStyle = document.createElement("style");
 				head.appendChild(globalStyle);
 			}
-			// Get styles
-			var styles = Array.from(module.getElementsByTagName("style"));
+			// Get styleElements
+			var styleElements = module.getElementsByTagName("style");
+			// Convert styleElements to an array
+			var styles = [];
+			for(var i = 0; i < styleElements.length; i++){
+				styles.push(styleElements[i]);
+			}
 			// Get links
 			var links = module.getElementsByTagName("link");
 			// Iterate through links
 			for(var i = 0; i < links.length; i++){
 				links[i].href = links[i].getAttribute("href");
 				// If the link references a css file, add it to styles
-				if(links[i].href.includes(".css")){
+				if(links[i].href.indexOf(".css") != -1){
 					styles.push(links[i]);
 				}
 			}
@@ -407,7 +427,7 @@ var modularjs = {
 					};
 					xhttp.open("GET", styles[i].href, true);
 					xhttp.send();
-					styles[i].remove();
+					styles[i].parentNode.removeChild(styles[i]);
 				// Else, get the inline code
 				}else{
 					globalStyle.innerHTML += confineStyle(styles[i].innerHTML, module.id);
@@ -418,6 +438,7 @@ var modularjs = {
 		// Apply a mutation observer to the supplied module
 		function applyMutationObserver(shadowModule, module){
 			var config = {
+				"characterData" : true,
 				"attributes" : true,
 				"childList" : true,
 				"subtree" : true
