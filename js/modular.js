@@ -1,26 +1,22 @@
 var modularjs = {
 	// Syncs a modules contents with the corresponding shadowModule
 	"syncModules" : function(module){
-		// Ascend the DOM until the first parent module is found
-		if(module.tagName.toLowerCase() != "module"){
-			modularjs.syncModules(module.parentElement);
+		// If the content of module is different from that of shadowModule, update module
+		if(module.innerHTML != modularjs.shadowModules[module.id].innerHTML){
+			module.innerHTML = modularjs.shadowModules[module.id].innerHTML;
+		}
+		// If the style has not been applied, return
+		if(!modularjs.shadowModules[module.id].hasAttribute("appliedStyle")){
 			return;
 		}
-		// If there is nothing to update, return
-		if(module.innerHTML == modularjs.shadowModules[module.id].innerHTML){
-			return;
-		}
-		module.innerHTML = modularjs.shadowModules[module.id].innerHTML;
+		module.setAttribute("visible", "");
 	},
 	"newModule" : function(name, modularJSON){
 		var module = document.createElement("module");
 		module.setAttribute("name", name);
 		module.innerHTML = JSON.stringify(modularJSON);
-		module.style.display = "none";
 		document.body.appendChild(module);
 		modularjs.main();
-		document.body.removeChild(module);
-		module.removeAttribute("style");
 		return module;
 	},
 	"mainDoc" : document,
@@ -74,10 +70,9 @@ var modularjs = {
 						applyScripts(shadowModule, this.module);
 						applyStyle(shadowModule);
 						modularjs.shadowModules[this.module.id] = shadowModule;
-						this.module.innerHTML = shadowModule.innerHTML;
-						applyMutationObserver(shadowModule, this.module);
 						// Invoke modularjs.main to take care of nested modules
 						modularjs.main();
+						applyMutationObserver(shadowModule, this.module);
 					// Else, show an alert and throw an error
 					}else{
 						var errorMessage = "There was an error loading the module '" + this.module.getAttribute("name") + "'";
@@ -417,6 +412,7 @@ var modularjs = {
 							// If the request is successful, add the source code to globalStyle
 							if(this.status == 200){
 								this.globalStyle.innerHTML += confineStyle(this.responseText, this.moduleId);
+								module.setAttribute("appliedStyle", "");
 							// Else, show an alert and throw an error
 							}else{
 								var errorMessage = "There was an error loading '" + this.hrefPath + "'";
@@ -431,6 +427,7 @@ var modularjs = {
 				// Else, get the inline code
 				}else{
 					globalStyle.innerHTML += confineStyle(styles[i].innerHTML, module.id);
+					module.setAttribute("appliedStyle", "");
 				}
 			}
 		}
@@ -451,6 +448,9 @@ var modularjs = {
 
 			var observer = new MutationObserver(callback);
 			observer.observe(shadowModule, config);
+
+			// Sync module for good measure
+			modularjs.syncModules(module);
 		}
 	}
 }
