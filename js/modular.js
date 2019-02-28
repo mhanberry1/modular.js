@@ -22,6 +22,7 @@ var modularjs = {
 	"mainDoc" : document,
 	"shadowModules" : {},
 	"functions" : {},
+	"cache" : {},
 	"setup" : function(){
 		var globalStyle = document.head.getElementsByTagName("style")[0];
 		// If there is not style tag, create one
@@ -56,6 +57,10 @@ var modularjs = {
 		}
 		// Iterate through untouchedModules
 		for(var i = 0; i < untouchedModules.length; i++){
+			// If there is no cache for the current module type set it up
+			if(modularjs.cache[untouchedModules[i].getAttribute("name")] == undefined){
+				modularjs.cache[untouchedModules[i].getAttribute("name")] = {};
+			}
 			// Get module documents
 			var xhttp = new XMLHttpRequest();
 			xhttp.module = untouchedModules[i];
@@ -357,11 +362,11 @@ var modularjs = {
 				}
 			}
 			// Confines the style to the module
-			function confineStyle(styleSource, moduleId){
+			function confineStyle(styleSource, moduleName){
 				var flags = {
 					"{" : [],
 					'"' : false,
-					"moduleId" : false
+					"moduleName" : false
 				}
 				// Remove comments
 				styleSource = styleSource.replace(/\/\*((?!\*\/)[\s\S])*\*\//g, "");
@@ -370,35 +375,35 @@ var modularjs = {
 					switch(styleSource[i]){
 						case '"':
 							flags['"'] = !flags['"'];
-							flags["moduleId"] = true;
+							flags["moduleName"] = true;
 							break;
 						case "{":
 							// If the " flag is false, push "{" to the stack
 							if(!flags['"']){
 								flags["{"].push("{");
 							}
-							flags["moduleId"] = true;
+							flags["moduleName"] = true;
 							break;
 						case "}":
 							// If the " flag is false, pop an element from the stack
 							if(!flags['"']){
 								flags["{"].pop();
 							}
-							// If the stack is empty, set the moduleId to false
+							// If the stack is empty, set the moduleName to false
 							if(flags["{"].length == 0){
-								flags["moduleId"] = false;
+								flags["moduleName"] = false;
 							}
 							break;
 						case ",":
 							// If the { and " flags are empty/false, toggle the module flag
 							if(flags["{"].length == 0 && !flags['"']){
-								flags["moduleId"] = !flags["moduleId"];
+								flags["moduleName"] = !flags["moduleName"];
 							}
 						default:
-							// If the moduleId flag is false and the current character is not whitespace or a comma, insert the module id
-							if(!flags["moduleId"] && !styleSource[i].match(/(\s|,)/g)){
-								styleSource = [styleSource.slice(0, i), "#" + moduleId, styleSource.slice(i)].join(" ");
-								flags["moduleId"] = !flags["moduleId"];
+							// If the moduleName flag is false and the current character is not whitespace or a comma, insert the module id
+							if(!flags["moduleName"] && !styleSource[i].match(/(\s|,)/g)){
+								styleSource = [styleSource.slice(0, i), "module[name=" + moduleName + "]", styleSource.slice(i)].join(" ");
+								flags["moduleName"] = !flags["moduleName"];
 							}
 					}
 				}
@@ -411,17 +416,29 @@ var modularjs = {
 			}
 			// Iterate through styles
 			for(var i = 0; i < styles.length; i++){
+				// Check the cache for the style
+				var cachedStyle = modularjs.cache[module.getAttribute("name")].style;
+				// If the style was found in the cache, set the appliedStyle attribute and continue
+				if(cachedStyle != undefined){
+					module.setAttribute("appliedStyle", "");
+					continue;
+				// Else, initialize the style cache for the module
+				}else{
+					modularjs.cache[module.getAttribute("name")].style = "";
+				}
 				// If the src attribute is defined, get the source file
 				if(styles[i].href != undefined){
 					var xhttp = new XMLHttpRequest();
 					xhttp.hrefPath = styles[i].src;
 					xhttp.globalStyle = globalStyle;
-					xhttp.moduleId = module.id;
+					xhttp.moduleName = module.getAttribute("name");
 					xhttp.onreadystatechange = function(){
 						if(this.readyState == 4){
-							// If the request is successful, add the source code to globalStyle
+							// If the request is successful, add the source code to globalStyle and update the cache
 							if(this.status == 200){
-								this.globalStyle.innerHTML += confineStyle(this.responseText, this.moduleId);
+								var confinedStyle = confineStyle(this.responseText, this.moduleName);
+								this.globalStyle.innerHTML += confinedStyle;
+								modularjs.cache[this.moduleName].style += confinedStyle;
 								module.setAttribute("appliedStyle", "");
 							// Else, show an alert and throw an error
 							}else{
@@ -434,9 +451,10 @@ var modularjs = {
 					xhttp.open("GET", styles[i].href, true);
 					xhttp.send();
 					styles[i].parentNode.removeChild(styles[i]);
-				// Else, get the inline code
+				// Else, get the inline code and update the cache
 				}else{
-					globalStyle.innerHTML += confineStyle(styles[i].innerHTML, module.id);
+					globalStyle.innerHTML += confineStyle(styles[i].innerHTML, module.getAttribute("name"));
+					modularjs[module.getAttribute("name")].style += confinedStyle;
 					module.setAttribute("appliedStyle", "");
 				}
 			}
