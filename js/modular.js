@@ -22,6 +22,17 @@ var modularjs = {
 	"mainDoc" : document,
 	"shadowModules" : {},
 	"functions" : {},
+	"setup" : function(){
+		var globalStyle = document.head.getElementsByTagName("style")[0];
+		// If there is not style tag, create one
+		if(globalStyle == undefined){
+			globalStyle = document.createElement("style");
+			document.head.appendChild(globalStyle);
+		}
+		globalStyle.innerHTML += "\nmodule:not([visible]){\n" +
+			"\tdisplay : none\n" +
+		"}\n";
+	},
 	"main" : function(){
 		// Keep track of module numbers for asynchrous operations
 		var moduleNumber = 0;
@@ -322,12 +333,11 @@ var modularjs = {
 		// Apply the style so that it is isolated to the given module
 		function applyStyle(module){
 			// Get the head and global style tags
-			var head = document.getElementsByTagName("head")[0];
-			var globalStyle = head.getElementsByTagName("style")[0];
+			var globalStyle = document.head.getElementsByTagName("style")[0];
 			// If globalStyle is undefined, create it
 			if(globalStyle == undefined){
 				globalStyle = document.createElement("style");
-				head.appendChild(globalStyle);
+				document.head.appendChild(globalStyle);
 			}
 			// Get styleElements
 			var styleElements = module.getElementsByTagName("style");
@@ -454,4 +464,25 @@ var modularjs = {
 		}
 	}
 }
-modularjs.main();
+
+// If document.body does not exist, take action when document.body materializes
+if(!document.body){
+	modularjs.documentObserver = new MutationObserver(
+		function(){
+			// If document.body exists, disconnect documentObserver and execute modularjs.setup() and modularjs.main()
+			if(document.body){
+				modularjs.documentObserver.disconnect();
+				modularjs.setup();
+				modularjs.main();
+			}
+		}
+	);
+	var config = {
+		childList : true
+	};
+	modularjs.documentObserver.observe(document.documentElement, config);
+// Else, execute modularjs.setup and modularjs.main();
+}else{
+	modularjs.setup();
+	modularjs.main();
+}
