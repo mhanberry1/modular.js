@@ -2,6 +2,23 @@ p {
 	padding: 0 1em;
 }
 
+.code, .inlineCode {
+	font-family: mono;
+}
+
+.code {
+	display: block;
+	padding: 0.5em;
+	margin: 0.5em 0;
+	border: 1px solid #e0e0e0;
+	background: white;
+}
+
+.inlineCode {
+	display: inline-block;
+	font-weight: bold;
+}
+
 .panel {
 	max-width: 1000px;
 	margin: auto;

@@ -67,8 +67,17 @@ var modularjs = {
 			// If the module is empty, xhttp.modularJSON = {}
 			if(xhttp.module.innerHTML.replace(/\s+/, "") == ""){
 				xhttp.modularJSON = {};
+			// Else, sanitize modularJSON and parse it
 			}else{
-				xhttp.modularJSON = JSON.parse(xhttp.module.innerHTML);
+				var unsanitized = xhttp.module.innerHTML.match(/=\s*"(\\"|[^"])*"/g);
+				unsanitized = (unsanitized == null) ? [] : unsanitized;
+				// Sanitize the unsanitized bits
+				var sanitizedJSON = xhttp.module.innerHTML;
+				for(var j = 0; j < unsanitized.length; j++){
+					var sanitized = '=\\"' + unsanitized[j].substring(2, unsanitized[j].length - 1) + '\\"';
+					sanitizedJSON = sanitizedJSON.replace(unsanitized[j], sanitized);
+				}
+				xhttp.modularJSON = JSON.parse(sanitizedJSON);
 			}
 			xhttp.onreadystatechange = function(){
 				if(this.readyState == 4){

@@ -4,6 +4,7 @@
 		<meta charset="utf-8">
 		<link rel="stylesheet" type="text/css" href="css/index.css">
 		<link rel="stylesheet" type="text/css" href="css/eForm.css">
+		<script src="js/modular.js"></script>
 	</head>
 	<body>
 		<module name="section">
@@ -15,9 +16,14 @@
 		<module name="section">
 			{
 				"header" : "How do I use it?",
-				"content" : "Using modular.js couldn't be simpler. All you have to do is include the modular.js file after the body of your top-level document, and you're ready to go! You can reference any modules that are stored in the modules directory by name like so: &lt;module name=\"section\"&gt;&lt;/module&gt;."
+				"content" : "Using modular.js couldn't be simpler. All you have to do is link the modular.js file to your document, and you're ready to go! You can reference any modules that are stored in the modules directory like so: <span class="code">&lt;module name=\"section\"&gt;&lt;/module&gt;</span> The above module will be populated with the code found in <span class="inlineCode">./modules/section/</span>"
+			}
+		</module>
+		<module name="section">
+			{
+				"header" : "Creating a Module",
+				"content" : "First, you need to set up the file structure by creating a directory called <span class="inlineCode">modules</span>. Inside of the modules directory, create another directory that has the same name as your module. Finally, create a file called <span class="inlineCode">index.html</span> in the new directory, and fill it with any other assets and code that your module requires."
 			}
 		</module>
 	</body>
-	<script src="js/modular.js"></script>
 </html>
