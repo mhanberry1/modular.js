@@ -15,14 +15,63 @@
 		</module>
 		<module name="section">
 			{
+				"header" : "Benefits of Using modular.js",
+				"content" : "<span class="subheader">Eliminate Collisions</span>
+					Every module gets its own shadow DOM to work with, so you don't have to worry about CSS or Javascript variables inside a module interfering with anything else.
+					<span class="subheader">Increase Portability</span>
+					Once you have created a module, you can re-use it in any other project without any modifications at all.
+					<span class="subheader">Decrease Redundancy</span>
+					Using modular.js allows you to reduce repeatable code down to a single line, so you only have to focus on unique information."
+			}
+		</module>
+		<module name="section">
+			{
 				"header" : "How do I use it?",
-				"content" : "Using modular.js couldn't be simpler. All you have to do is link the modular.js file to your document, and you're ready to go! You can reference any modules that are stored in the modules directory like so: <span class="code">&lt;module name=\"section\"&gt;&lt;/module&gt;</span> The above module will be populated with the code found in <span class="inlineCode">./modules/section/</span>"
+				"content" : "Using modular.js couldn't be simpler. All you have to do is link the modular.js file to your document, and you're ready to go!
+				<span class="code">&lt;script src=\"js/modular.js\"&gt;&lt;/script&gt;</span>
+				You can then reference any modules that are stored in the modules directory like so:
+				<span class="code">&lt;module name=\"section\"&gt;&lt;/module&gt;</span>
+				The above module will be populated with the code found in <span class="inlineCode">./modules/section/</span>"
 			}
 		</module>
 		<module name="section">
 			{
 				"header" : "Creating a Module",
-				"content" : "First, you need to set up the file structure by creating a directory called <span class="inlineCode">modules</span>. Inside of the modules directory, create another directory that has the same name as your module. Finally, create a file called <span class="inlineCode">index.html</span> in the new directory, and fill it with any other assets and code that your module requires."
+				"content" : "<ol>
+					<li>Set up the file structure by creating a directory called <span class="inlineCode">modules</span>.</li>
+					<li>Inside of the modules directory, create another directory that has the same name as your module.</li>
+					<li>Create a file called <span class="inlineCode">index.html</span> in the new directory, and fill it with any other assets and code that your module requires.</li>
+				</ol>"
+			}
+		</module>
+		<module name="section">
+			{
+				"header" : "Extra functionality",
+				"content" : "The code that goes into a module is no different than the code that goes into a webpage. Nevertheless, there are a few extra capabilities that modular.js brings to the table.
+				<span class="subheader">Variable Substitution</span>
+				Inside a module, you can specify where unique information can be injected by using <span class="inlineCode">{{ }}</span>
+				<span class="code">
+					&lt;div&gt;<br>
+						&nbsp;&nbsp;&lt;h1&gt;{{header}}&lt;/h1&gt;<br>
+						&nbsp;&nbsp;&lt;p&gt;{{content}}&lt;/p&gt;<br>
+					&lt;/div&gt;<br>
+				</span>
+				When referencing this module, you can feed it information by constructing a JSON inside of the module body.
+				<span class="code">
+					&lt;module name=\"moduleName\"&gt;<br>
+						&nbsp;&nbsp;{<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;\"header\" : \"This is the Header\",<br>
+							&nbsp;&nbsp;&nbsp;&nbsp;\"content\" : \"This is the content.\"<br>
+						&nbsp;&nbsp;}<br>
+					&lt;/module&gt;
+				</span>
+				The resulting HTML will look like this:
+				<span class="code">
+					&lt;div&gt;<br>
+						&nbsp;&nbsp;&lt;h1&gt;This is the Header&lt;/h1&gt;<br>
+						&nbsp;&nbsp;&lt;p&gt;This is the content.&lt;/p&gt;<br>
+					&lt;/div&gt;<br>
+				</span>"
 			}
 		</module>
 	</body>

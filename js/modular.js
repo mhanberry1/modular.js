@@ -77,6 +77,7 @@ var modularjs = {
 					var sanitized = '=\\"' + unsanitized[j].substring(2, unsanitized[j].length - 1) + '\\"';
 					sanitizedJSON = sanitizedJSON.replace(unsanitized[j], sanitized);
 				}
+				sanitizedJSON = sanitizedJSON.replace(/(\n|\t)/g, "    ");
 				xhttp.modularJSON = JSON.parse(sanitizedJSON);
 			}
 			xhttp.onreadystatechange = function(){

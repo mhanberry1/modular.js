@@ -2,13 +2,18 @@ p {
 	padding: 0 1em;
 }
 
+li {
+	padding: 0.5em;
+}
+
 .code, .inlineCode {
 	font-family: mono;
 }
 
 .code {
 	display: block;
-	padding: 0.5em;
+	line-height: 1.5em;
+	padding: 0 0.5em;
 	margin: 0.5em 0;
 	border: 1px solid #e0e0e0;
 	background: white;
@@ -24,4 +29,11 @@ p {
 	margin: auto;
 	margin-top: .5rem;
 	margin-bottom: .5rem;
+}
+
+.subheader {
+	display: block;
+	font-size: 1.1em;
+	font-weight: bold;
+	line-height: 3em;
 }
