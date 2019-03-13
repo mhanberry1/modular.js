@@ -425,6 +425,10 @@ var modularjs = {
 				styleSource = styleSource.replace(/\s+html{/g, "{");
 				return styleSource;
 			}
+			// If there are no style elements, set the appliedStyle attribute
+			if(styles.length == 0){
+				module.setAttribute("appliedStyle", "");
+			}
 			// Iterate through styles
 			for(var i = 0; i < styles.length; i++){
 				// Check the cache for the style
