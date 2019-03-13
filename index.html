@@ -46,7 +46,7 @@
 		</module>
 		<module name="section">
 			{
-				"header" : "Extra functionality",
+				"header" : "Extra Functionality",
 				"content" : "The code that goes into a module is no different than the code that goes into a webpage. Nevertheless, there are a few extra capabilities that modular.js brings to the table.
 				<span class="subheader">Variable Substitution</span>
 				Inside a module, you can specify where unique information can be injected by using <span class="inlineCode">{{ }}</span>
@@ -71,7 +71,29 @@
 						&nbsp;&nbsp;&lt;h1&gt;This is the Header&lt;/h1&gt;<br>
 						&nbsp;&nbsp;&lt;p&gt;This is the content.&lt;/p&gt;<br>
 					&lt;/div&gt;<br>
-				</span>"
+				</span>
+				<span class="subheader">Accessing the Parent DOM</span>
+				Although each module has its own shadow DOM, you can access the parent DOM that the module is embedded in.
+				<span class="code">
+					var parentDOM = document.parent;
+				</span>
+				In the same manner, you can access the parent of a parent, and so-on.
+				<span class="code">
+					var grandparentDOM = document.parent.parent;
+				</span>
+				<span class="subheader">Accessing the main DOM</span>
+				In the case of modules that are embedded in one another, it may be useful to jump straight to the top of the DOM tree, a.k.a the main Doc.
+				<span class="code">
+					var mainDoc = modularjs.mainDoc;
+				</span>
+				This is made available to you through the modularjs object, which every module has access to.
+				<span class="subheader">Sharing information between modules</span>
+				If you would like to share information between modules, you can do so by adding key/value pairs to modularjs.sharedInfo like so:
+				<span class="code">
+					modularjs.sharedInfo[\"key1\"] = \"value1\";<br>
+					modularjs.sharedInfo[\"key2\"] = \"value2\";
+				</span>
+				"
 			}
 		</module>
 	</body>
