@@ -316,7 +316,7 @@ var modularjs = {
 			functionSrc.emptySlots = functionSrc.length;
 			for(var i = 0; i < scripts.length; i++){
 				// If the src attribute is defined, get the source file
-				if(scripts[i].src != undefined){
+				if(scripts[i].src){
 					var xhttp = new XMLHttpRequest();
 					xhttp.index = i;
 					xhttp.srcPath = scripts[i].src;
@@ -437,7 +437,7 @@ var modularjs = {
 					modularjs.cache[module.getAttribute("name")].style = "";
 				}
 				// If the src attribute is defined, get the source file
-				if(styles[i].href != undefined){
+				if(styles[i].href){
 					var xhttp = new XMLHttpRequest();
 					xhttp.hrefPath = styles[i].src;
 					xhttp.globalStyle = globalStyle;
