@@ -20,6 +20,7 @@ var modularjs = {
 		return module;
 	},
 	"mainDoc" : document,
+	"sharedInfo" : {},
 	"shadowModules" : {},
 	"functions" : {},
 	"cache" : {},
