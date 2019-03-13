@@ -421,8 +421,10 @@ var modularjs = {
 				// Remove "body" and "html" selectors and return
 				styleSource = styleSource.replace(/\s+body\s+/g, "");
 				styleSource = styleSource.replace(/\s+body{/g, "{");
+				styleSource = styleSource.replace(/\s+body\./g, "\.");
 				styleSource = styleSource.replace(/\s+html\s+/g, "");
 				styleSource = styleSource.replace(/\s+html{/g, "{");
+				styleSource = styleSource.replace(/\s+html\./g, "\.");
 				return styleSource;
 			}
 			// If there are no style elements, set the appliedStyle attribute
