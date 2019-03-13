@@ -468,8 +468,9 @@ var modularjs = {
 					styles[i].parentNode.removeChild(styles[i]);
 				// Else, get the inline code and update the cache
 				}else{
-					globalStyle.innerHTML += confineStyle(styles[i].innerHTML, module.getAttribute("name"));
-					modularjs[module.getAttribute("name")].style += confinedStyle;
+					var confinedStyle = confineStyle(styles[i].innerHTML, module.getAttribute("name"));
+					globalStyle.innerHTML += confinedStyle;
+					modularjs.cache[module.getAttribute("name")].style += confinedStyle;
 					module.setAttribute("appliedStyle", "");
 				}
 			}
