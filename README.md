@@ -18,7 +18,9 @@ Using modular.js allows you to reduce repeatable code down to a single line, so 
 
 # How do I use it?
 
-Detailed instructions on how to use modular.js can be found in [index.html](index.html). Open It up in a web browser to see the treasures that lie in wait.
+Detailed instructions on how to use modular.js can be found in [index.html](index.html). Deploy it to a server, then open It up in a web browser to see the treasures that lie in wait.
+
+<i>Note: modular.js does not function properly without being deployed on a server due browser CORS policies.</i>
 
 # Where can I find examples?
 
