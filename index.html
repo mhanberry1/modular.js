@@ -7,6 +7,12 @@
 		<script src="js/modular.js"></script>
 	</head>
 	<body>
+		<module name="mainTitle">
+			{
+				"mainTitle" : "modular.js Documentation"
+			}
+		</module>
+		<module name="menu"></module>
 		<module name="section">
 			{
 				"header" : "What is modular.js?",
@@ -88,10 +94,16 @@
 				</span>
 				This is made available to you through the modularjs object, which every module has access to.
 				<span class="subheader">Sharing information between modules</span>
-				If you would like to share information between modules, you can do so by adding key/value pairs to modularjs.sharedInfo like so:
+				If you would like to share information between modules, you can do so by adding key/value pairs to <span class="inlineCode">modularjs.sharedInfo</span> like so:
 				<span class="code">
 					modularjs.sharedInfo[\"key1\"] = \"value1\";<br>
 					modularjs.sharedInfo[\"key2\"] = \"value2\";
+				</span>
+				<span class="subheader">Access the Current Module's Name and ID</span>
+				In a module's javascript, you can access that module's name and id at runtime through the <span class="inlineCode">document.name</span> and <span class="inlineCode">document.id</span> attributes.
+				<span class="code">
+					var moduleName = document.name;<br>
+					var moduleID = document.id;
 				</span>
 				"
 			}

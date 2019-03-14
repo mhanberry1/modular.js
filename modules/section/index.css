@@ -1,3 +1,8 @@
+body {
+	margin: auto;
+	transition: 0.5s;
+}
+
 p {
 	padding: 0 1em;
 }
@@ -36,4 +41,8 @@ li {
 	font-size: 1.1em;
 	font-weight: bold;
 	line-height: 3em;
+}
+
+.menuActive {
+	max-width: calc(1000px - 225px);
 }

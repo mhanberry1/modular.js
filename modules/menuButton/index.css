@@ -1,0 +1,8 @@
+div {
+	float: left;
+	line-height: 35px;
+}
+
+div:hover {
+	cursor: pointer;
+}

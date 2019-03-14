@@ -1,0 +1,11 @@
+h1 {
+	text-align: center;
+	line-height: 40px;
+	margin: 0;
+}
+
+.spacer {
+	display: block;
+	height: 50px;
+	width: 100%;
+}
