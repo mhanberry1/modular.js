@@ -16,6 +16,17 @@ var modularjs = {
 			return;
 		}
 		module.setAttribute("visible", "");
+		// If all modules are visible, execute the functions in modularjs.doOnceLoaded
+		var numModules = document.getElementsByTagName("module").length;
+		var numVisibleModules = document.querySelectorAll('module[visible=""]').length;
+		if(numModules == numVisibleModules){
+			var func = modularjs.doOnceLoaded.pop();
+			while(func != undefined){
+				console.log(func);
+				func();
+				func = modularjs.doOnceLoaded.pop();
+			}
+		}
 	},
 	"newModule" : function(name, modularJSON){
 		var module = document.createElement("module");
@@ -30,6 +41,7 @@ var modularjs = {
 	"shadowModules" : {},
 	"functions" : {},
 	"cache" : {},
+	"doOnceLoaded" : [],
 	"setup" : function(){
 		var globalStyle = document.head.getElementsByTagName("style")[0];
 		// If there is not style tag, create one

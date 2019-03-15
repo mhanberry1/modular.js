@@ -12,6 +12,7 @@
 				"mainTitle" : "modular.js Documentation"
 			}
 		</module>
+		<!--The contents of the menu are generated in js/generateMenu.js-->
 		<module name="menu" class="e-dark-gray"></module>
 		<module name="section">
 			{
@@ -124,8 +125,17 @@
 					document.body.appendChild(newModule);
 				</span>
 				<span class="inlineCode">modularjs.newModule()</span> accepts two arguments. The first is the name of the module you are creating an instance of, and the second is a JSON that defines the values used by that module.
-				"
+				<span class="subheader">Schedule functions to be completed once all modules have loaded</span>
+				If there are functions that need to be executed once all modules have been loaded, you should push them into <span class="inlineCode">modularjs.doOnceLoaded</span>.
+				<span class="code">
+					modularjs.doOnceLoaded.push(<br>
+						&nbsp;&nbsp;function(){<br>
+						&nbsp;&nbsp;&nbsp;&nbsp;console.log(\"Finished loading!\");<br>
+						&nbsp;&nbsp;}<br>
+					);
+				</span>"
 			}
 		</module>
 	</body>
+	<script src="js/generateMenu.js"></script>
 </html>
