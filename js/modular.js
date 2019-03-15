@@ -1,8 +1,14 @@
 var modularjs = {
 	// Syncs a modules contents with the corresponding shadowModule
 	"syncModules" : function(module){
+		// If there are any stray links in the shadow module, remove them
+		var links = modularjs.shadowModules[module.id].getElementsByTagName("link");
+		for(var i = 0; i < links.length; i++){
+			links[i].parentNode.removeChild(links[i]);
+		}
 		// If the content of module is different from that of shadowModule, update module
 		if(module.innerHTML != modularjs.shadowModules[module.id].innerHTML){
+			var links
 			module.innerHTML = modularjs.shadowModules[module.id].innerHTML;
 		}
 		// If the style has not been applied, return
