@@ -12,7 +12,7 @@
 				"mainTitle" : "modular.js Documentation"
 			}
 		</module>
-		<module name="menu"></module>
+		<module name="menu" class="e-dark-gray"></module>
 		<module name="section">
 			{
 				"header" : "What is modular.js?",
@@ -105,6 +105,25 @@
 					var moduleName = document.name;<br>
 					var moduleID = document.id;
 				</span>
+				<span class="subheader">Create a new instance of a module programatically</span>
+				You don't have to hard-code every instance of a module. You can programatically generate modules using <span class="inlineCode">modularjs.newModule()</span>.
+				<span class="code">
+					// Set up the information pertaining to the module<br>
+					var moduleName = \"section\";<br>
+					var moduleContent = {<br>
+						&nbsp;&nbsp;\"header\" : \"This is a header\",<br>
+						&nbsp;&nbsp;\"body\" : \"This is the body\"<br>
+					};<br>
+					<br>
+					<br>
+					// Create a new instance of a module<br>
+					var newModule = modularjs.newModule(moduleName, moduleContent);<br>
+					<br>
+					<br>
+					// Append it to the document body<br>
+					document.body.appendChild(newModule);
+				</span>
+				<span class="inlineCode">modularjs.newModule()</span> accepts two arguments. The first is the name of the module you are creating an instance of, and the second is a JSON that defines the values used by that module.
 				"
 			}
 		</module>
