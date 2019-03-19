@@ -55,6 +55,9 @@
 			{
 				"header" : "Extra Functionality",
 				"content" : "The code that goes into a module is no different than the code that goes into a webpage. Nevertheless, there are a few extra capabilities that modular.js brings to the table.
+				<br>
+				<br>
+				<br>
 				<span class="subheader">Variable Substitution</span>
 				Inside a module, you can specify where unique information can be injected by using <span class="inlineCode">{{ }}</span>
 				<span class="code">
@@ -79,6 +82,8 @@
 						&nbsp;&nbsp;&lt;p&gt;This is the content.&lt;/p&gt;<br>
 					&lt;/div&gt;<br>
 				</span>
+				<br>
+				<br>
 				<span class="subheader">Accessing the Parent DOM</span>
 				Although each module has its own shadow DOM, you can access the parent DOM that the module is embedded in.
 				<span class="code">
@@ -88,28 +93,37 @@
 				<span class="code">
 					var grandparentDOM = document.parent.parent;
 				</span>
+				<br>
+				<br>
 				<span class="subheader">Accessing the main DOM</span>
 				In the case of modules that are embedded in one another, it may be useful to jump straight to the top of the DOM tree, a.k.a the main Doc.
 				<span class="code">
 					var mainDoc = modularjs.mainDoc;
 				</span>
 				This is made available to you through the modularjs object, which every module has access to.
+				<br>
+				<br>
+				<br>
 				<span class="subheader">Sharing information between modules</span>
 				If you would like to share information between modules, you can do so by adding key/value pairs to <span class="inlineCode">modularjs.sharedInfo</span> like so:
 				<span class="code">
 					modularjs.sharedInfo[\"key1\"] = \"value1\";<br>
 					modularjs.sharedInfo[\"key2\"] = \"value2\";
 				</span>
+				<br>
+				<br>
 				<span class="subheader">Access the Current Module's Name and ID</span>
 				In a module's javascript, you can access that module's name and id at runtime through the <span class="inlineCode">document.name</span> and <span class="inlineCode">document.id</span> attributes.
 				<span class="code">
 					var moduleName = document.name;<br>
 					var moduleID = document.id;
 				</span>
+				<br>
+				<br>
 				<span class="subheader">Create a new instance of a module programatically</span>
 				You don't have to hard-code every instance of a module. You can programatically generate modules using <span class="inlineCode">modularjs.newModule()</span>.
 				<span class="code">
-					// Set up the information pertaining to the module<br>
+					// Define the information pertaining to a module<br>
 					var moduleName = \"section\";<br>
 					var moduleContent = {<br>
 						&nbsp;&nbsp;\"header\" : \"This is a header\",<br>
@@ -125,6 +139,9 @@
 					document.body.appendChild(newModule);
 				</span>
 				<span class="inlineCode">modularjs.newModule()</span> accepts two arguments. The first is the name of the module you are creating an instance of, and the second is a JSON that defines the values used by that module.
+				<br>
+				<br>
+				<br>
 				<span class="subheader">Schedule functions to be completed once all modules have loaded</span>
 				If there are functions that need to be executed once all modules have been loaded, you should push them into <span class="inlineCode">modularjs.doOnceLoaded</span>.
 				<span class="code">

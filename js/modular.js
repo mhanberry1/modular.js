@@ -22,7 +22,6 @@ var modularjs = {
 		if(numModules == numVisibleModules){
 			var func = modularjs.doOnceLoaded.pop();
 			while(func != undefined){
-				console.log(func);
 				func();
 				func = modularjs.doOnceLoaded.pop();
 			}
@@ -121,13 +120,14 @@ var modularjs = {
 					// Else, show an alert and throw an error
 					}else{
 						var errorMessage = "There was an error loading the module '" + this.module.getAttribute("name") + "'";
+						console.log(window.location.pathname);
 						alert(errorMessage);
 						throw errorMessage;
 					}
 				}
 			};
 			var moduleName = xhttp.module.getAttribute("name");
-			xhttp.open("GET", "/modules/" + moduleName + "/index.html", true);
+			xhttp.open("GET", window.location.pathname + "modules/" + moduleName + "/index.html", true);
 			xhttp.send();
 		}
 
@@ -143,7 +143,7 @@ var modularjs = {
 					// If the path does not reference a network, adjust it
 					if(!path.indexOf("://") != -1){
 						cleanPath = path.replace(/(\ssrc|\shref|=|"|')/g, "");
-						result = path.replace(/=.*/, '="/modules/' + moduleName + "/" + cleanPath + '"');
+						result = path.replace(/=.*/, '="' + window.location.pathname + 'modules/' + moduleName + "/" + cleanPath + '"');
 						return result;
 					// Else, leave the path alone
 					}else{
