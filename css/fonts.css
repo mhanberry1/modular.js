@@ -1,0 +1,49 @@
+/*Noto Sans*/
+@font-face {
+	font-family: "Noto Sans";
+	src: url("/fonts/noto/NotoSans-Regular.ttf");
+}
+
+@font-face {
+	font-family: "Noto Sans";
+	src: url("/fonts/noto/NotoSans-Bold.ttf");
+	font-weight: bold;
+}
+
+@font-face {
+	font-family: "Noto Sans";
+	src: url("/fonts/noto/NotoSans-Italic.ttf");
+	font-style: italic;
+}
+
+@font-face {
+	font-family: "Noto Sans";
+	src: url("/fonts/hack/NotoSans-BoldItalic.ttf");
+	font-weight: bold;
+	font-style: italic;
+}
+
+/* Hack */
+@font-face {
+	font-family: "Hack";
+	src: url("/fonts/hack/Hack-Regular.ttf");
+}
+
+@font-face {
+	font-family: "Hack";
+	src: url("/fonts/hack/Hack-Bold.ttf");
+	font-weight: bold;
+}
+
+@font-face {
+	font-family: "Hack";
+	src: url("/fonts/hack/Hack-Italic.ttf");
+	font-style: italic;
+}
+
+@font-face {
+	font-family: "Hack";
+	src: url("/fonts/hack/Hack-BoldItalic.ttf");
+	font-weight: bold;
+	font-style: italic;
+}
