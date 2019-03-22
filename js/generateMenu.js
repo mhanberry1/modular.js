@@ -32,7 +32,7 @@ modularjs.doOnceLoaded.push(
 				);
 				var onclick = "'window.scroll(" + options + ")'";
 				var subheader = subheaders[j].textContent;
-				ul.innerHTML += "<li class='subheader invisible' onclick=" + onclick + ">" +
+				ul.innerHTML += "<li class='subheader invisible fixedPosition' onclick=" + onclick + ">" +
 					"<span>▸</span>" + subheader +
 				"</li>";
 			}
@@ -43,6 +43,16 @@ modularjs.doOnceLoaded.push(
 // Toggles the visibility of subheaders related to headerElement
 function toggleSubheaders(headerElement){
 	var current = headerElement.parentElement;
+	var subheaders = [];
+	var i = 0;
+
+	// If the header element is not rotated, rotate it
+	if(!headerElement.classList.contains("rotated")){
+		headerElement.classList.add("rotated");
+	// Elese, unrotate it
+	}else{
+		headerElement.classList.remove("rotated");
+	}
 
 	// Toggle subheaders
 	while(true){
@@ -51,17 +61,27 @@ function toggleSubheaders(headerElement){
 		// If the next element is null, or if it is a subheader, break
 		if(next == null || !next.classList.contains("subheader")){
 			break;
-		// Else, make the next element the current element
-		}else{
-			current = next;
 		}
+
+		subheaders.push(next);
 
 		// If the subheader is invisible, make it visible
 		if(next.classList.contains("invisible")){
+			next.classList.remove("fixedPosition");
 			next.classList.remove("invisible");
 		// Else, make the subheader invisible
 		}else{
 			next.classList.add("invisible");
+			// Wait for the animation to end before making the position fixed
+			setTimeout(
+				function(){
+					subheaders[i++].classList.add("fixedPosition");
+				},
+				500
+			);
 		}
+
+		// Update the current element
+		current = next;
 	}
 }
