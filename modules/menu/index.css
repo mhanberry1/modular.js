@@ -41,6 +41,18 @@ span {
 	top: -2px;
 }
 
+.subheader {
+	padding-left: 40px;
+	transition: 0.5s;
+}
+
+.invisible {
+	padding: 0;
+	margin: 0;
+	height: 0;
+	opacity: 0;
+}
+
 @media (max-width: 400px) {
 	ul {
 		max-width: 100%;

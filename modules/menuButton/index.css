@@ -1,5 +1,5 @@
 div {
-	float: left;
+	position: fixed;
 	line-height: 35px;
 }
 
