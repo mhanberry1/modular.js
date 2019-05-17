@@ -26,7 +26,6 @@ var modularjs = {
 				func = modularjs.doOnceLoaded.pop();
 			}
 		}
-		modularjs.main();
 	},
 	"newModule" : function(name, modularJSON){
 		var module = document.createElement("module");
@@ -138,6 +137,14 @@ var modularjs = {
 			// If there are no paths, return
 			if(paths == null){
 				return html;
+			}
+			// Remove paths that are not sane
+			for(var i = 0; i < paths.length; i++){
+				try{
+					eval(paths[i]);
+				}catch(e){
+					paths.splice(i--, 1)
+				}
 			}
 			var adjustedPaths = paths.map(
 				function(path){
