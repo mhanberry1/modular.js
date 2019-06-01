@@ -342,12 +342,13 @@ var modularjs = {
 			var scripts = shadowModule.getElementsByTagName("script");
 			var functionSrc = new Array(scripts.length);
 			functionSrc.emptySlots = functionSrc.length;
-			for(var i = 0; i < scripts.length; i++){
+			var scriptIndex = 0;
+			while(scripts.length > 0){
 				// If the src attribute is defined, get the source file
-				if(scripts[i].src){
+				if(scripts[0].src){
 					var xhttp = new XMLHttpRequest();
-					xhttp.index = i;
-					xhttp.srcPath = scripts[i].src;
+					xhttp.index = scriptIndex;
+					xhttp.srcPath = scripts[0].src;
 					xhttp.onreadystatechange = function(){
 						if(this.readyState == 4){
 							// If the request is successful, load the source code into a function
@@ -362,14 +363,15 @@ var modularjs = {
 							}
 						}
 					};
-					xhttp.open("GET", scripts[i].src, true);
+					xhttp.open("GET", scripts[0].src, true);
 					xhttp.send();
 				// Else, get the inline code
 				}else{
-					functionSrc[i] = adjustNavigation(scripts[i].innerText);
+					functionSrc[scriptIndex] = adjustNavigation(scripts[0].innerText);
 					constructFunc();
 				}
-				scripts[i].parentNode.removeChild(scripts[i]);
+				scripts[0].parentNode.removeChild(scripts[0]);
+				scriptIndex++;
 			}
 		}
 
