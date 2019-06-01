@@ -26,6 +26,7 @@ var modularjs = {
 				func = modularjs.doOnceLoaded.pop();
 			}
 		}
+		modularjs.main();
 	},
 	"newModule" : function(name, modularJSON){
 		var module = document.createElement("module");
