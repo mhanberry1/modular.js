@@ -175,7 +175,9 @@ var modularjs = {
 			if(values != null){
 				for(var i = 0; i < values.length; i++){
 					var key = values[i].replace(/({{|}})/g, "");
-					source = source.replace(values[i], modularJSON[key]);
+					var injection = JSON.stringify(modularJSON[key]);
+					injection = (!injection) ? "" : injection.replace(/(^"|"$)/g, "");
+					source = source.replace(values[i], injection);
 				}
 			}
 			return source;
