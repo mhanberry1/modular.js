@@ -121,19 +121,20 @@ var modularjs = {
 					// Else, show an alert and throw an error
 					}else{
 						var errorMessage = "There was an error loading the module '" + this.module.getAttribute("name") + "'";
-						console.log(window.location.pathname);
 						alert(errorMessage);
 						throw errorMessage;
 					}
 				}
 			};
 			var moduleName = xhttp.module.getAttribute("name");
-			xhttp.open("GET", window.location.pathname + "modules/" + moduleName + "/index.html", true);
+			var directory = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
+			xhttp.open("GET", directory + "modules/" + moduleName + "/index.html", true);
 			xhttp.send();
 		}
 
 		// Adjusts relative src and href values
 		function adjustPaths(html, moduleName){
+			var directory = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
 			var paths = html.match(/\s(src|href)\s*=\s*["'][^"']*["']/g);
 			// If there are no paths, return
 			if(paths == null){
@@ -152,7 +153,7 @@ var modularjs = {
 					// If the path does not reference a network, adjust it
 					if(!path.indexOf("://") != -1){
 						cleanPath = path.replace(/(\ssrc|\shref|=|"|')/g, "");
-						result = path.replace(/=.*/, '="' + window.location.pathname + 'modules/' + moduleName + "/" + cleanPath + '"');
+						result = path.replace(/=.*/, '="' + directory + 'modules/' + moduleName + "/" + cleanPath + '"');
 						return result;
 					// Else, leave the path alone
 					}else{
