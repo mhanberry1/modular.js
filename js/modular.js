@@ -191,7 +191,7 @@ var modularjs = {
 
 		// Extract all function invocations from the supplied src
 		function extractAllFunctionInvocations(src){
-			return src.match(/[a-zA-Z0-9_.\[\]]+\s*\(([a-zA-Z0-9_,.\[\]\s]*|\\\(|\\\)|'.*'(,\s*('.*'|".*"))*|".*"(,\s*('.*'|".*"))*)\)/g);
+			return src.match(/[a-zA-Z0-9_.\[\]]+\s*\(([a-zA-Z0-9_{},.\[\]\s]*|\\\(|\\\)|'.*'(,\s*('.*'|".*"))*|".*"(,\s*('.*'|".*"))*)\)/g);
 		}
 
 		// Extract a function name from the supplied function context instantiations or invocations)
