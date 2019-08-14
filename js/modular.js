@@ -45,7 +45,6 @@ var modularjs = {
 					var cloneChild = relevantCloneChildren[j];
 					var originalChild = relevantOriginalChildren[j];
 					
-					console.log(syncDirection);
 					// If syncDirection is fromShadow, specify onchange and mjs-original-onchange
 					if(syncDirection == "fromShadow"){
 						cloneChild.setAttribute("onchange", "this.setAttribute('value', this.value)");
@@ -71,8 +70,9 @@ var modularjs = {
 
 		}
 
-		// If the style has not been applied, return
+		// If the style has not been applied,re-enable the source's mutations observer and return
 		if(!shadowModule.hasAttribute("appliedStyle")){
+			source.mutationObserver.observe(source, modularjs.mutationObserverConfig);
 			return;
 		}
 		module.setAttribute("visible", "");
@@ -122,7 +122,7 @@ var modularjs = {
 			document.head.appendChild(globalStyle);
 		}
 		globalStyle.innerHTML += "\nmodule:not([visible]){\n" +
-			"\tdisplay : none\n" +
+			"\tdisplay : none !important\n" +
 		"}\n";
 	},
 	"mutationObserverConfig" : {
@@ -610,9 +610,6 @@ var modularjs = {
 			// Store the mutation observers for future reference
 			shadowModule.mutationObserver = shadowObserver;
 			module.mutationObserver = moduleObserver;
-
-			// Sync module for good measure
-			//modularjs.syncModules(module, "fromShadow");
 		}
 	}
 }
