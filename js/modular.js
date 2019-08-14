@@ -1,21 +1,83 @@
 var modularjs = {
-	// Syncs a modules contents with the corresponding shadowModule
-	"syncModules" : function(module){
+	// Syncs a modules contents with the corresponding shadowModule as specified by syncDirection
+	"syncModules" : function(module, syncDirection){
+		var shadowModule = modularjs.shadowModules[module.id];
+		inputValueQueue = [];
+
+		// Define the source and destination based on syncDirection
+		switch(syncDirection){
+			case "fromShadow":
+				var source = shadowModule;
+				var destination = module;
+				break;
+			case "toShadow":
+				var source = module;
+				var destination = shadowModule;
+				break;
+			default:
+				throw "The sync direction '" + syncDirection + "' is not valid.";
+		}
+
+		// Disable the source and the destination's mutation observer
+		source.mutationObserver.disconnect();
+		destination.mutationObserver.disconnect();
+
 		// If there are any stray links in the shadow module, remove them
-		var links = modularjs.shadowModules[module.id].getElementsByTagName("link");
+		var links = shadowModule.getElementsByTagName("link");
 		for(var i = 0; i < links.length; i++){
 			links[i].parentNode.removeChild(links[i]);
 		}
+		
 		// If the content of module is different from that of shadowModule, update module
-		if(module.innerHTML != modularjs.shadowModules[module.id].innerHTML){
-			var links
-			module.innerHTML = modularjs.shadowModules[module.id].innerHTML;
+		if(module.innerHTML != shadowModule.innerHTML){
+			
+			var children = source.childNodes;
+			destination.innerHTML = "";
+
+			// Clone all children from the shadow module and put them in the module
+			for(var i = 0; i < children.length; i++){
+				var clone = children[i].cloneNode(true);
+
+				// Modify the onchange event in each input, textbox and select element so that changes are reflected in the HTML attributes
+				var relevantCloneChildren = (clone.tagName) ? clone.querySelectorAll("input,textbox,select") : "";
+				var relevantOriginalChildren = (children[i].tagName) ? children[i].querySelectorAll("input,textbox,select") : "";
+				for(var j = 0; j < relevantCloneChildren.length; j++){
+					var cloneChild = relevantCloneChildren[j];
+					var originalChild = relevantOriginalChildren[j];
+					
+					// If syncDirection is fromShadow, specify onchange and mjs-original-onchange
+					if(syncDirection == "fromShadow"){
+						cloneChild.setAttribute("onchange", "this.setAttribute('value', this.value)");
+						cloneChild.setAttribute("mjs-original-onchange", originalChild.getAttribute("onchange"));
+						cloneChild.setAttribute("value", originalChild.value);
+						cloneChild.value = originalChild.value;
+					
+					// Else, if the value has changed, queue changes to the value property, and modify the onchange attribute
+					}else{
+						cloneChild.setAttribute("onchange", cloneChild.getAttribute("onchange") + "; " + cloneChild.getAttribute("mjs-original-onchange"));
+						cloneChild.onchange = new Function(cloneChild.getAttribute("onchange"));
+						cloneChild.removeAttribute("mjs-original-onchange");
+						cloneChild.removeAttribute("value", "");
+						inputValueQueue.push(
+							{
+								"element" : cloneChild,
+								"value" : originalChild.value
+							}
+						);
+					}
+				}
+
+				destination.appendChild(clone);
+			}
+
 		}
+
 		// If the style has not been applied, return
-		if(!modularjs.shadowModules[module.id].hasAttribute("appliedStyle")){
+		if(!shadowModule.hasAttribute("appliedStyle")){
 			return;
 		}
 		module.setAttribute("visible", "");
+
 		// If all modules are visible, execute the functions in modularjs.doOnceLoaded
 		var numModules = document.getElementsByTagName("module").length;
 		var numVisibleModules = document.querySelectorAll('module[visible=""]').length;
@@ -27,6 +89,17 @@ var modularjs = {
 			}
 		}
 		modularjs.main();
+
+		// Re-enable the source and the destination's mutation observer
+		source.mutationObserver.observe(source, modularjs.mutationObserverConfig);
+		destination.mutationObserver.observe(destination, modularjs.mutationObserverConfig);
+
+		// Apply input changes from inputValueQueue
+		for(var i = 0; i < inputValueQueue.length; i++){
+			inputValueQueue[i].element.value = inputValueQueue[i].value;
+			inputValueQueue[i].element.onchange();
+		}
+
 	},
 	"newModule" : function(name, modularJSON){
 		var module = document.createElement("module");
@@ -52,6 +125,12 @@ var modularjs = {
 		globalStyle.innerHTML += "\nmodule:not([visible]){\n" +
 			"\tdisplay : none\n" +
 		"}\n";
+	},
+	"mutationObserverConfig" : {
+		"characterData" : true,
+		"attributes" : true,
+		"childList" : true,
+		"subtree" : true
 	},
 	"main" : function(){
 		// Keep track of module numbers for asynchrous operations
@@ -128,13 +207,12 @@ var modularjs = {
 			};
 			var moduleName = xhttp.module.getAttribute("name");
 			var directory = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
-			xhttp.open("GET", directory + "modules/" + moduleName + "/index.html", true);
+			xhttp.open("GET", directory + "/modules/" + moduleName + "/index.html", true);
 			xhttp.send();
 		}
 
 		// Adjusts relative src and href values
 		function adjustPaths(html, moduleName){
-			var directory = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
 			var paths = html.match(/\s(src|href)\s*=\s*["'][^"']*["']/g);
 			// If there are no paths, return
 			if(paths == null){
@@ -150,6 +228,8 @@ var modularjs = {
 			}
 			var adjustedPaths = paths.map(
 				function(path){
+					var directory = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
+
 					// If the path does not reference a network, adjust it
 					if(!path.indexOf("://") != -1){
 						cleanPath = path.replace(/(\ssrc|\shref|=|"|')/g, "");
@@ -171,7 +251,7 @@ var modularjs = {
 
 		// Interpret values incapsulated in "{{ }}"
 		function injectModularJSON(source, modularJSON){
-			var values = source.match(/{{[^({{)]*}}/g);
+			var values = source.match(/{{.*}}/g);
 			// If "values" is not null, terate through values and inject values from modularJSON
 			if(values != null){
 				for(var i = 0; i < values.length; i++){
@@ -191,7 +271,7 @@ var modularjs = {
 
 		// Extract all function invocations from the supplied src
 		function extractAllFunctionInvocations(src){
-			return src.match(/[a-zA-Z0-9_.\[\]]+\s*\(([a-zA-Z0-9_{},.\[\]\s]*|\\\(|\\\)|'.*'(,\s*('.*'|".*"))*|".*"(,\s*('.*'|".*"))*)\)/g);
+			return src.match(/[a-zA-Z0-9_.\[\]]+\s*\(([a-zA-Z0-9_,.\[\]\s]*|\\\(|\\\)|'.*'(,\s*('.*'|".*"))*|".*"(,\s*('.*'|".*"))*)\)/g);
 		}
 
 		// Extract a function name from the supplied function context instantiations or invocations)
@@ -342,15 +422,14 @@ var modularjs = {
 				shadowDocument.parent = getRootNode(module);
 			}
 			// Iterate through scripts and construct functionSrc
-			var scripts = shadowModule.getElementsByTagName("script");
 			var functionSrc = new Array(scripts.length);
 			functionSrc.emptySlots = functionSrc.length;
-			var scriptIndex = 0;
+			srcIndex = 0;
 			while(scripts.length > 0){
 				// If the src attribute is defined, get the source file
 				if(scripts[0].src){
 					var xhttp = new XMLHttpRequest();
-					xhttp.index = scriptIndex;
+					xhttp.index = srcIndex;
 					xhttp.srcPath = scripts[0].src;
 					xhttp.onreadystatechange = function(){
 						if(this.readyState == 4){
@@ -370,11 +449,11 @@ var modularjs = {
 					xhttp.send();
 				// Else, get the inline code
 				}else{
-					functionSrc[scriptIndex] = adjustNavigation(scripts[0].innerText);
+					functionSrc[srcIndex] = adjustNavigation(scripts[0].innerText);
 					constructFunc();
 				}
 				scripts[0].parentNode.removeChild(scripts[0]);
-				scriptIndex++;
+				srcIndex++;
 			}
 		}
 
@@ -510,25 +589,31 @@ var modularjs = {
 			}
 		}
 
-		// Apply a mutation observer to the supplied module
+		// Apply a mutation observer to the supplied module and its corresponding shadowModule
 		function applyMutationObserver(shadowModule, module){
-			var config = {
-				"characterData" : true,
-				"attributes" : true,
-				"childList" : true,
-				"subtree" : true
-			};
 
 			// Syncs the module with its corresponding shadowModule
-			function callback(mutations){
-				modularjs.syncModules(module);
+			function shadowCallback(mutations){
+				modularjs.syncModules(module, "fromShadow");
 			}
 
-			var observer = new MutationObserver(callback);
-			observer.observe(shadowModule, config);
+			var shadowObserver = new MutationObserver(shadowCallback);
+			shadowObserver.observe(shadowModule, modularjs.mutationObserverConfig);
+
+			// Syncs the shadowModule with its corresponding module
+			function moduleCallback(){
+				modularjs.syncModules(module, "toShadow");
+			}
+
+			var moduleObserver = new MutationObserver(moduleCallback);
+			moduleObserver.observe(module, modularjs.mutationObserverConfig);
+
+			// Store the mutation observers for future reference
+			shadowModule.mutationObserver = shadowObserver;
+			module.mutationObserver = moduleObserver;
 
 			// Sync module for good measure
-			modularjs.syncModules(module);
+			//modularjs.syncModules(module, "fromShadow");
 		}
 	}
 }
