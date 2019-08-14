@@ -45,19 +45,18 @@ var modularjs = {
 					var cloneChild = relevantCloneChildren[j];
 					var originalChild = relevantOriginalChildren[j];
 					
+					console.log(syncDirection);
 					// If syncDirection is fromShadow, specify onchange and mjs-original-onchange
 					if(syncDirection == "fromShadow"){
 						cloneChild.setAttribute("onchange", "this.setAttribute('value', this.value)");
 						cloneChild.setAttribute("mjs-original-onchange", originalChild.getAttribute("onchange"));
-						cloneChild.setAttribute("value", originalChild.value);
-						cloneChild.value = originalChild.value;
+						cloneChild.value = (originalChild.value) ? originalChild.value : cloneChild.value;
 					
-					// Else, if the value has changed, queue changes to the value property, and modify the onchange attribute
+					// Else, queue changes to the value property, and modify the onchange attribute
 					}else{
 						cloneChild.setAttribute("onchange", cloneChild.getAttribute("onchange") + "; " + cloneChild.getAttribute("mjs-original-onchange"));
 						cloneChild.onchange = new Function(cloneChild.getAttribute("onchange"));
 						cloneChild.removeAttribute("mjs-original-onchange");
-						cloneChild.removeAttribute("value", "");
 						inputValueQueue.push(
 							{
 								"element" : cloneChild,
