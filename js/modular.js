@@ -104,7 +104,17 @@ var modularjs = {
 		var module = document.createElement("module");
 		module.setAttribute("name", name);
 		module.innerHTML = JSON.stringify(modularJSON);
-		document.body.appendChild(module);
+
+		// If the module staging area doesn't exist yet, create it
+		var staging = document.getElementById("mjs-moduleStaging");
+		if(!staging){
+			staging = document.createElement("div");
+			staging.id = "mjs-moduleStaging";
+			staging.style.display = "none";
+			document.body.appendChild(staging);
+		}
+
+		staging.appendChild(module);
 		modularjs.main();
 		return module;
 	},
