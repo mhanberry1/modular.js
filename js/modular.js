@@ -28,46 +28,42 @@ var modularjs = {
 			links[i].parentNode.removeChild(links[i]);
 		}
 		
-		// If the content of module is different from that of shadowModule, update module
-		if(module.innerHTML != shadowModule.innerHTML){
-			
-			var children = source.childNodes;
-			destination.innerHTML = "";
+		// Clone all children from the shadow module and put them in the module
+		var children = source.childNodes;
+		destination.innerHTML = "";
+		for(var i = 0; i < children.length; i++){
+			var clone = children[i].cloneNode(true);
 
-			// Clone all children from the shadow module and put them in the module
-			for(var i = 0; i < children.length; i++){
-				var clone = children[i].cloneNode(true);
-
-				// Modify the onchange event in each input, textbox and select element so that changes are reflected in the HTML attributes
-				var relevantCloneChildren = (clone.tagName) ? clone.querySelectorAll("input,textbox,select") : "";
-				var relevantOriginalChildren = (children[i].tagName) ? children[i].querySelectorAll("input,textbox,select") : "";
-				for(var j = 0; j < relevantCloneChildren.length; j++){
-					var cloneChild = relevantCloneChildren[j];
-					var originalChild = relevantOriginalChildren[j];
-					
-					// If syncDirection is fromShadow, specify onchange and mjs-original-onchange
-					if(syncDirection == "fromShadow"){
-						cloneChild.setAttribute("onchange", "this.setAttribute('value', this.value)");
-						cloneChild.setAttribute("mjs-original-onchange", originalChild.getAttribute("onchange"));
-						cloneChild.value = (originalChild.value) ? originalChild.value : cloneChild.value;
-					
-					// Else, queue changes to the value property, and modify the onchange attribute
-					}else{
-						cloneChild.setAttribute("onchange", cloneChild.getAttribute("onchange") + "; " + cloneChild.getAttribute("mjs-original-onchange"));
-						cloneChild.onchange = new Function(cloneChild.getAttribute("onchange"));
-						cloneChild.removeAttribute("mjs-original-onchange");
-						inputValueQueue.push(
-							{
-								"element" : cloneChild,
-								"value" : originalChild.value
-							}
-						);
-					}
+			// Modify the onchange event in each input, textbox and select element so that changes are reflected in the HTML attributes
+			var relevantCloneChildren = (clone.tagName) ? clone.querySelectorAll("input,textbox,select") : "";
+			var relevantOriginalChildren = (children[i].tagName) ? children[i].querySelectorAll("input,textbox,select") : "";
+			for(var j = 0; j < relevantCloneChildren.length; j++){
+				var cloneChild = relevantCloneChildren[j];
+				var originalChild = relevantOriginalChildren[j];
+				
+				// If syncDirection is fromShadow, specify onchange and mjs-original-onchange
+				if(syncDirection == "fromShadow"){
+					console.log("here");
+					cloneChild.setAttribute("onchange", "this.setAttribute('value', this.value)");
+					cloneChild.setAttribute("mjs-original-onchange", originalChild.getAttribute("onchange"));
+					cloneChild.value = (originalChild.value) ? originalChild.value : cloneChild.value;
+				
+				// Else, queue changes to the value property, and modify the onchange attribute
+				}else{
+					console.log("there");
+					cloneChild.setAttribute("onchange", cloneChild.getAttribute("onchange") + "; " + cloneChild.getAttribute("mjs-original-onchange"));
+					cloneChild.onchange = new Function(cloneChild.getAttribute("onchange"));
+					cloneChild.removeAttribute("mjs-original-onchange");
+					inputValueQueue.push(
+						{
+							"element" : cloneChild,
+							"value" : originalChild.value
+						}
+					);
 				}
-
-				destination.appendChild(clone);
 			}
 
+			destination.appendChild(clone);
 		}
 
 		// If the style has not been applied,re-enable the source's mutations observer and return
@@ -240,6 +236,7 @@ var modularjs = {
 			// If the module body is cached, use the cache
 			if(modularjs.cache[moduleName].body){
 				renderModule(xhttp.module, xhttp.modularJSON, modularjs.cache[moduleName].body);
+				modularjs.syncModules(xhttp.module, "fromShadow");
 
 			// Else, send the request
 			}else{
@@ -368,6 +365,13 @@ var modularjs = {
 		// Format the scripts so that they are isolated to the given module
 		function applyScripts(shadowModule, module){
 			var scripts = shadowModule.getElementsByTagName("script");
+			var cache = modularjs.cache[module.getAttribute("name")].scripts;
+
+			// If the scripts cache doesn't exist, create it
+			if(!cache){
+				modularjs.cache[module.getAttribute("name")].scripts = new Array(scripts.length);
+				cache = modularjs.cache[module.getAttribute("name")].scripts;
+			}
 			
 			// Adjusts window navigation so that relative links become absolute links
 			function adjustNavigation(script){
@@ -493,17 +497,24 @@ var modularjs = {
 			srcIndex = 0;
 			while(scripts.length > 0){
 				
-				// If the src attribute is defined, get the source file
-				if(scripts[0].src){
+				// If the current script is already cached, use the cache
+				if(cache[srcIndex]){
+					console.log("accessing cache");
+					functionSrc[srcIndex] = adjustNavigation(cache[srcIndex]);
+					constructFunc();
+
+				// Else, if the src attribute is defined, get the source file
+				}else if(scripts[0].src){
 					var xhttp = new XMLHttpRequest();
 					xhttp.index = srcIndex;
 					xhttp.srcPath = scripts[0].src;
 					xhttp.onreadystatechange = function(){
 						if(this.readyState == 4){
 							
-							// If the request is successful, load the source code into a function
+							// If the request is successful, load the source code into a function and update the cache
 							if(this.status == 200){
 								functionSrc[this.index] = adjustNavigation(this.responseText);
+								cache[this.index] = this.responseText;
 								constructFunc();
 							
 							// Else, show an alert and throw an error
@@ -517,9 +528,10 @@ var modularjs = {
 					xhttp.open("GET", scripts[0].src, true);
 					xhttp.send();
 				
-				// Else, get the inline code
+				// Else, get the inline code and update the cache
 				}else{
 					functionSrc[srcIndex] = adjustNavigation(scripts[0].innerText);
+					cache[srcIndex] = scripts[0].innerText;
 					constructFunc();
 				}
 				scripts[0].parentNode.removeChild(scripts[0]);
