@@ -1,8 +1,9 @@
 var modularjs = {
 	// Syncs a modules contents with the corresponding shadowModule as specified by syncDirection
-	"syncModules" : function(module, syncDirection){
+	"syncModules" : function(module, syncDirection, doOnce){
 		var shadowModule = modularjs.shadowModules[module.id];
 		inputValueQueue = [];
+		console.log(module);
 
 		// Define the source and destination based on syncDirection
 		switch(syncDirection){
@@ -43,14 +44,12 @@ var modularjs = {
 				
 				// If syncDirection is fromShadow, specify onchange and mjs-original-onchange
 				if(syncDirection == "fromShadow"){
-					console.log("here");
 					cloneChild.setAttribute("onchange", "this.setAttribute('value', this.value)");
 					cloneChild.setAttribute("mjs-original-onchange", originalChild.getAttribute("onchange"));
 					cloneChild.value = (originalChild.value) ? originalChild.value : cloneChild.value;
 				
 				// Else, queue changes to the value property, and modify the onchange attribute
 				}else{
-					console.log("there");
 					cloneChild.setAttribute("onchange", cloneChild.getAttribute("onchange") + "; " + cloneChild.getAttribute("mjs-original-onchange"));
 					cloneChild.onchange = new Function(cloneChild.getAttribute("onchange"));
 					cloneChild.removeAttribute("mjs-original-onchange");
@@ -68,7 +67,7 @@ var modularjs = {
 
 		// If the style has not been applied,re-enable the source's mutations observer and return
 		if(!shadowModule.hasAttribute("appliedStyle")){
-			source.mutationObserver.observe(source, modularjs.mutationObserverConfig);
+			shadowModule.mutationObserver.observe(source, modularjs.mutationObserverConfig);
 			return;
 		}
 		module.setAttribute("visible", "");
@@ -95,6 +94,9 @@ var modularjs = {
 			inputValueQueue[i].element.onchange();
 		}
 
+		if(doOnce){
+			modularjs.syncModules(module, synchDirection, true);
+		}
 	},
 	"newModule" : function(name, modularJSON){
 		var module = document.createElement("module");
@@ -139,9 +141,6 @@ var modularjs = {
 		"subtree" : true
 	},
 	"main" : function(){
-		// Keep track of module numbers for asynchrous operations
-		var moduleNumber = 0;
-
 		// Get all modules
 		var modules = document.getElementsByTagName("module");
 
@@ -152,9 +151,6 @@ var modularjs = {
 			if(modules[i].getAttribute("touched") != "true"){
 				untouchedModules.push(modules[i]);
 				modules[i].setAttribute("touched", "true");
-			// Else, increment moduleNumber
-			}else{
-				moduleNumber++;
 			}
 		}
 
@@ -193,7 +189,8 @@ var modularjs = {
 
 			// Render the specified module to the page using the supplied modularJSON and html as parameters
 			function renderModule(module, modularJSON, html){
-						module.id = "module" + moduleNumber++;
+						moduleNumber = Object.keys(modularjs.shadowModules).length;
+						module.id = "module" + moduleNumber;
 						var moduleName = module.getAttribute("name");
 						var shadowModule = document.createElement("module");
 						shadowModule.id = module.id;
@@ -205,6 +202,7 @@ var modularjs = {
 						applyScripts(shadowModule, module);
 						applyStyle(shadowModule);
 						modularjs.shadowModules[module.id] = shadowModule;
+						console.log(modularjs.shadowModules);
 
 						// Invoke modularjs.main to take care of nested modules
 						modularjs.main();
@@ -499,7 +497,6 @@ var modularjs = {
 				
 				// If the current script is already cached, use the cache
 				if(cache[srcIndex]){
-					console.log("accessing cache");
 					functionSrc[srcIndex] = adjustNavigation(cache[srcIndex]);
 					constructFunc();
 
