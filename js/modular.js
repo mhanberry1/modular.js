@@ -202,11 +202,13 @@ var modularjs = {
 						applyScripts(shadowModule, module);
 						applyStyle(shadowModule);
 						modularjs.shadowModules[module.id] = shadowModule;
-						console.log(modularjs.shadowModules);
 
 						// Invoke modularjs.main to take care of nested modules
 						modularjs.main();
 						applyMutationObserver(shadowModule, module);
+
+						// Sync the module with its shadow
+						modularjs.syncModules(module, "fromShadow");
 			}
 
 			// Process the code once it has been retrieved
