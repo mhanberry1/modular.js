@@ -686,6 +686,7 @@ var modularjs = {
 				}else if(cache.style == undefined){
 					cache.style = "";
 					cache.styleMarkers = new Array(styles.length);
+					cache.styleMarkers[i] = true;
 
 				// Else, mark that retrieval of the current style has commenced
 				}else{
