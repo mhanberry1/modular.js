@@ -650,6 +650,9 @@ var modularjs = {
 				// Check the cache for the style
 				var cachedStyle = modularjs.cache[module.getAttribute("name")].style;
 				
+				// Remove styles[i] from the dom
+				styles[i].parentNode.removeChild(styles[i]);
+
 				// If the style was found in the cache, set the appliedStyle attribute and continue
 				if(cachedStyle != undefined){
 					module.setAttribute("appliedStyle", "");
@@ -686,7 +689,6 @@ var modularjs = {
 					};
 					xhttp.open("GET", styles[i].href, true);
 					xhttp.send();
-					styles[i].parentNode.removeChild(styles[i]);
 				
 				// Else, get the inline code and update the cache
 				}else{
