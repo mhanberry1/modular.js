@@ -576,6 +576,7 @@ var modularjs = {
 				var flags = {
 					"{" : [],
 					'"' : false,
+					"@" : false,
 					"moduleName" : false
 				}
 				
@@ -589,20 +590,35 @@ var modularjs = {
 							flags['"'] = !flags['"'];
 							flags["moduleName"] = true;
 							break;
+
 						case "{":
 							
-							// If the " flag is false, push "{" to the stack
-							if(!flags['"']){
+							// If the " flag and the @ flag is false, push "{" to the stack
+							if(!flags['"'] && !flags["@"]){
 								flags["{"].push("{");
 							}
 
-							flags["moduleName"] = true;
+							// If the @ flag is true, set it to false
+							if(flags["@"]){
+								flags["@"] = false;
+
+							// Else, set the moduleName tag to true
+							}else{
+								flags["moduleName"] = true;
+							}
+
 							break;
+
 						case "}":
 							
 							// If the " flag is false, pop an element from the stack
 							if(!flags['"']){
 								flags["{"].pop();
+							}
+
+							// If the @ flag is true, set it to false
+							if(flags["@"]){
+								flags["@"] = false;
 							}
 							
 							// If the stack is empty, set the moduleName to false
@@ -611,17 +627,28 @@ var modularjs = {
 							}
 							
 							break;
+
 						case ",":
 							
 							// If the { and " flags are empty/false, toggle the module flag
 							if(flags["{"].length == 0 && !flags['"']){
 								flags["moduleName"] = !flags["moduleName"];
 							}
+							
+							break;
+
+						case "@":
+							// If the " flag is false, set the @ flag to true
+							if(!flags['"']){
+								flags["@"] = true;
+							}
+
+							break;
 						
 						default:
 							
-							// If the moduleName flag is false and the current character is not whitespace or a comma, insert the module id
-							if(!flags["moduleName"] && !styleSource[i].match(/(\s|,)/g)){
+							// If the moduleName flag is false, the @ flag is false, and the current character is not whitespace, insert the module id
+							if(!flags["moduleName"] && !flags["@"] && !styleSource[i].match(/\s/g)){
 								styleSource = [styleSource.slice(0, i), "module[name=" + moduleName + "]", styleSource.slice(i)].join(" ");
 								flags["moduleName"] = !flags["moduleName"];
 							}
@@ -651,7 +678,7 @@ var modularjs = {
 				styles[i].parentNode.removeChild(styles[i]);
 
 				// If the style was found in the cache, set the appliedStyle attribute and continue
-				if(cache.style != undefined && !cache.styleMarkers.includes(undefined)){
+				if(cache.style != undefined && cache.styleMarkers[i] != undefined){
 					module.setAttribute("appliedStyle", "");
 					continue;
 				
@@ -659,6 +686,10 @@ var modularjs = {
 				}else if(cache.style == undefined){
 					cache.style = "";
 					cache.styleMarkers = new Array(styles.length);
+
+				// Else, mark that retrieval of the current style has commenced
+				}else{
+					cache.styleMarkers[i] = true;
 				}
 				
 				// If the src attribute is defined, get the source file
@@ -676,7 +707,6 @@ var modularjs = {
 								var confinedStyle = confineStyle(this.responseText, this.moduleName);
 								this.globalStyle.innerHTML += confinedStyle;
 								cache.style += confinedStyle;
-								cache.styleMarkers[this.index] = true;
 								
 								// If all styles have been applied, add the appliedStyle attribute
 								if(!cache.styleMarkers.includes(undefined)){
@@ -699,7 +729,6 @@ var modularjs = {
 					var confinedStyle = confineStyle(styles[i].innerHTML, module.getAttribute("name"));
 					globalStyle.innerHTML += confinedStyle;
 					cache.style += confinedStyle;
-					cache.styleMarkers[i] = true;
 								
 					// If all styles have been applied, add the appliedStyle attribute
 					if(!cache.styleMarkers.includes(undefined)){
