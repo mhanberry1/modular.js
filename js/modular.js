@@ -3,7 +3,6 @@ var modularjs = {
 	"syncModules" : function(module, syncDirection, doOnce){
 		var shadowModule = modularjs.shadowModules[module.id];
 		inputValueQueue = [];
-		console.log(module);
 
 		// Define the source and destination based on syncDirection
 		switch(syncDirection){
@@ -646,21 +645,20 @@ var modularjs = {
 
 			// Iterate through styles
 			for(var i = 0; i < styles.length; i++){
-				
-				// Check the cache for the style
-				var cachedStyle = modularjs.cache[module.getAttribute("name")].style;
+				var cache = modularjs.cache[module.getAttribute("name")];
 				
 				// Remove styles[i] from the dom
 				styles[i].parentNode.removeChild(styles[i]);
 
 				// If the style was found in the cache, set the appliedStyle attribute and continue
-				if(cachedStyle != undefined){
+				if(cache.style != undefined && cache.numStyles == styles.length){
 					module.setAttribute("appliedStyle", "");
 					continue;
 				
-				// Else, initialize the style cache for the module
-				}else{
-					modularjs.cache[module.getAttribute("name")].style = "";
+				// Else, if no styles have been applied yet, initialize the style cache for the module
+				}else if(cache.style == undefined){
+					cache.style = "";
+					cache.numStyles = 0;
 				}
 				
 				// If the src attribute is defined, get the source file
@@ -676,8 +674,11 @@ var modularjs = {
 							if(this.status == 200){
 								var confinedStyle = confineStyle(this.responseText, this.moduleName);
 								this.globalStyle.innerHTML += confinedStyle;
-								modularjs.cache[this.moduleName].style += confinedStyle;
-								module.setAttribute("appliedStyle", "");
+								cache.style += confinedStyle;
+								cache.numStyles++;
+								if(cache.numStyles == styles.length){
+									module.setAttribute("appliedStyle", "");
+								}
 							
 							// Else, show an alert and throw an error
 							}else{
@@ -694,8 +695,11 @@ var modularjs = {
 				}else{
 					var confinedStyle = confineStyle(styles[i].innerHTML, module.getAttribute("name"));
 					globalStyle.innerHTML += confinedStyle;
-					modularjs.cache[module.getAttribute("name")].style += confinedStyle;
-					module.setAttribute("appliedStyle", "");
+					cache.style += confinedStyle;
+					cache.numStyles++;
+					if(cache.numStyles == styles.length){
+						module.setAttribute("appliedStyle", "");
+					}
 				}
 			}
 		}
