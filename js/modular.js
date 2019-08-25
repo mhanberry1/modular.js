@@ -651,20 +651,21 @@ var modularjs = {
 				styles[i].parentNode.removeChild(styles[i]);
 
 				// If the style was found in the cache, set the appliedStyle attribute and continue
-				if(cache.style != undefined && cache.numStyles == styles.length){
+				if(cache.style != undefined && !cache.styleMarkers.includes(undefined)){
 					module.setAttribute("appliedStyle", "");
 					continue;
 				
 				// Else, if no styles have been applied yet, initialize the style cache for the module
 				}else if(cache.style == undefined){
 					cache.style = "";
-					cache.numStyles = 0;
+					cache.styleMarkers = new Array(styles.length);
 				}
 				
 				// If the src attribute is defined, get the source file
 				if(styles[i].href){
 					var xhttp = new XMLHttpRequest();
 					xhttp.hrefPath = styles[i].src;
+					xhttp.index = i;
 					xhttp.globalStyle = globalStyle;
 					xhttp.moduleName = module.getAttribute("name");
 					xhttp.onreadystatechange = function(){
@@ -675,8 +676,10 @@ var modularjs = {
 								var confinedStyle = confineStyle(this.responseText, this.moduleName);
 								this.globalStyle.innerHTML += confinedStyle;
 								cache.style += confinedStyle;
-								cache.numStyles++;
-								if(cache.numStyles == styles.length){
+								cache.styleMarkers[this.index] = true;
+								
+								// If all styles have been applied, add the appliedStyle attribute
+								if(!cache.styleMarkers.includes(undefined)){
 									module.setAttribute("appliedStyle", "");
 								}
 							
@@ -696,8 +699,10 @@ var modularjs = {
 					var confinedStyle = confineStyle(styles[i].innerHTML, module.getAttribute("name"));
 					globalStyle.innerHTML += confinedStyle;
 					cache.style += confinedStyle;
-					cache.numStyles++;
-					if(cache.numStyles == styles.length){
+					cache.styleMarkers[i] = true;
+								
+					// If all styles have been applied, add the appliedStyle attribute
+					if(!cache.styleMarkers.includes(undefined)){
 						module.setAttribute("appliedStyle", "");
 					}
 				}
