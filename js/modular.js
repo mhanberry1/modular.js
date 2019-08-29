@@ -290,11 +290,11 @@ var modularjs = {
 		function injectModularJSON(source, modularJSON){
 			var values = source.match(/{{.*}}/g);
 
-			// If "values" is not null, terate through values and inject values from modularJSON
+			// If "values" is not null, iterate through values and inject values from modularJSON
 			if(values != null){
 				for(var i = 0; i < values.length; i++){
 					var key = values[i].replace(/({{|}})/g, "");
-					var injection = JSON.stringify(modularJSON[key]);
+					var injection = (typeof modularJSON[key] != "string") ? JSON.stringify(modularJSON[key]) : modularJSON[key];
 					injection = (!injection) ? "" : injection.replace(/(^"|"$)/g, "");
 					source = source.replace(values[i], injection);
 				}
