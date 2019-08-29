@@ -478,8 +478,11 @@ var modularjs = {
 			}else{
 				function getRootNode(node){
 					
-					// If the node is a document, return the node
-					if(node.toString().indexOf("HTMLDocument") != -1){
+					// If the parent node is null or the node is a document, return the node
+					if(
+						node.parentNode == null ||
+						node.toString().indexOf("HTMLDocument") != -1
+					){
 						return node;
 					
 					// Else, inspect parent node
@@ -490,8 +493,17 @@ var modularjs = {
 				shadowDocument.parent = getRootNode(module);
 			}
 			
+			// Try to initialize functionSrc
+			try{
+				var functionSrc = new Array(scripts.length);
+
+			// In the event of an error (due to a bug in IE), redefine scripts and try again
+			}catch(e){
+				var scripts = shadowModule.getElementsByTagName("script");
+				var functionSrc = new Array(scripts.length);
+			}
+
 			// Iterate through scripts and construct functionSrc
-			var functionSrc = new Array(scripts.length);
 			functionSrc.emptySlots = functionSrc.length;
 			srcIndex = 0;
 			while(scripts.length > 0){
@@ -765,6 +777,23 @@ var modularjs = {
 	}
 }
 
+// Applies polyfills where necessary
+function applyPolyfills(){
+	if(!Array.prototype.includes){
+		 //or use Object.defineProperty
+		 Array.prototype.includes = function(search){
+			return !!~this.indexOf(search);
+		}
+	}
+}
+
+window.onload = function(){
+	applyPolyfills();
+	modularjs.setup();
+	modularjs.main();
+};
+
+/*
 // If document.body does not exist, take action when document.body materializes
 if(!document.body){
 	modularjs.documentObserver = new MutationObserver(
@@ -788,3 +817,4 @@ if(!document.body){
 	modularjs.setup();
 	modularjs.main();
 }
+*/
