@@ -787,11 +787,21 @@ function applyPolyfills(){
 	}
 }
 
-window.onload = function(){
-	applyPolyfills();
-	modularjs.setup();
-	modularjs.main();
-};
+document.documentElement.setAttribute("style", "display: none;");;
+
+waitForBody = setInterval(
+	function(){
+		if(document.body){
+			clearInterval(waitForBody);
+			applyPolyfills();
+			modularjs.setup();
+			modularjs.main();
+			document.documentElement.removeAttribute("style");
+			console.log("here");
+		}
+	},
+	1000
+);
 
 /*
 // If document.body does not exist, take action when document.body materializes
