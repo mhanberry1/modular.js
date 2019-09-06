@@ -797,7 +797,6 @@ waitForBody = setInterval(
 			modularjs.setup();
 			modularjs.main();
 			document.documentElement.removeAttribute("style");
-			console.log("here");
 		}
 	},
 	1000
