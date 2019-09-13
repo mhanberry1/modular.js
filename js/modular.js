@@ -288,7 +288,7 @@ var modularjs = {
 
 		// Interpret values incapsulated in "{{ }}"
 		function injectModularJSON(source, modularJSON){
-			var values = source.match(/{{.*}}/g);
+			var values = source.match(/{{[^{}].*}}/g);
 
 			// If "values" is not null, iterate through values and inject values from modularJSON
 			if(values != null){
