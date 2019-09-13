@@ -198,8 +198,8 @@ var modularjs = {
 							adjustPaths(html, moduleName),
 							modularJSON
 						);
-						applyScripts(shadowModule, module);
-						applyStyle(shadowModule);
+						applyScripts(shadowModule, module, modularJSON);
+						applyStyle(shadowModule, modularJSON);
 						modularjs.shadowModules[module.id] = shadowModule;
 
 						// Invoke modularjs.main to take care of nested modules
@@ -288,7 +288,7 @@ var modularjs = {
 
 		// Interpret values incapsulated in "{{ }}"
 		function injectModularJSON(source, modularJSON){
-			var values = source.match(/{{[^{}].*}}/g);
+			var values = source.match(/{{[^{}]*}}/g);
 
 			// If "values" is not null, iterate through values and inject values from modularJSON
 			if(values != null){
@@ -362,7 +362,7 @@ var modularjs = {
 		}
 
 		// Format the scripts so that they are isolated to the given module
-		function applyScripts(shadowModule, module){
+		function applyScripts(shadowModule, module, modularJSON){
 			var scripts = shadowModule.getElementsByTagName("script");
 			var cache = modularjs.cache[module.getAttribute("name")].scripts;
 
@@ -508,13 +508,22 @@ var modularjs = {
 			srcIndex = 0;
 			while(scripts.length > 0){
 				
-				// If the current script is already cached, use the cache
-				if(cache[srcIndex]){
-					functionSrc[srcIndex] = adjustNavigation(cache[srcIndex]);
+				
+				// If the current script does not have an src attribute, get the inline code
+				if(!scripts[0].src){
+					functionSrc[srcIndex] = adjustNavigation(scripts[0].innerText);
 					constructFunc();
 
-				// Else, if the src attribute is defined, get the source file
-				}else if(scripts[0].src){
+				// Else, if the current script is already cached, use the cache
+				}else if(cache[srcIndex]){
+					functionSrc[srcIndex] = injectModularJSON(
+						adjustNavigation(cache[srcIndex]),
+						modularJSON
+					);
+					constructFunc();
+
+				// Else, get the source file
+				}else{
 					var xhttp = new XMLHttpRequest();
 					xhttp.index = srcIndex;
 					xhttp.srcPath = scripts[0].src;
@@ -523,7 +532,10 @@ var modularjs = {
 							
 							// If the request is successful, load the source code into a function and update the cache
 							if(this.status == 200){
-								functionSrc[this.index] = adjustNavigation(this.responseText);
+								functionSrc[this.index] = injectModularJSON(
+									adjustNavigation(this.responseText),
+									modularJSON
+								);
 								cache[this.index] = this.responseText;
 								constructFunc();
 							
@@ -538,11 +550,6 @@ var modularjs = {
 					xhttp.open("GET", scripts[0].src, true);
 					xhttp.send();
 				
-				// Else, get the inline code and update the cache
-				}else{
-					functionSrc[srcIndex] = adjustNavigation(scripts[0].innerText);
-					cache[srcIndex] = scripts[0].innerText;
-					constructFunc();
 				}
 				scripts[0].parentNode.removeChild(scripts[0]);
 				srcIndex++;
@@ -550,7 +557,7 @@ var modularjs = {
 		}
 
 		// Apply the style so that it is isolated to the given module
-		function applyStyle(module){
+		function applyStyle(module, modularJSON){
 			
 			// Get the head and global style tags
 			var globalStyle = document.head.getElementsByTagName("style")[0];
@@ -717,7 +724,10 @@ var modularjs = {
 							
 							// If the request is successful, add the source code to globalStyle and update the cache
 							if(this.status == 200){
-								var confinedStyle = confineStyle(this.responseText, this.moduleName);
+								var confinedStyle = injectModularJSON(
+									confineStyle(this.responseText, this.moduleName),
+									modularJSON
+								);
 								this.globalStyle.innerHTML += confinedStyle;
 								cache.style += confinedStyle;
 								
@@ -739,7 +749,10 @@ var modularjs = {
 				
 				// Else, get the inline code and update the cache
 				}else{
-					var confinedStyle = confineStyle(styles[i].innerHTML, module.getAttribute("name"));
+					var confinedStyle = injectModularJSON(
+						confineStyle(styles[i].innerHTML, module.getAttribute("name")),
+						modularJSON
+					);
 					globalStyle.innerHTML += confinedStyle;
 					cache.style += confinedStyle;
 								
