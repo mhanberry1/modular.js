@@ -468,6 +468,7 @@ var modularjs = {
 			
 			// Create shadowDocument
 			var shadowDocument = document.implementation.createHTMLDocument(shadowModule.id);
+			shadowDocument.module = module;
 			shadowDocument.id = shadowModule.id;
 			shadowDocument.name = shadowModule.getAttribute("name");
 			shadowDocument.body.appendChild(shadowModule);
