@@ -75,9 +75,10 @@ var modularjs = {
 		var numModules = document.getElementsByTagName("module").length;
 		var numVisibleModules = document.querySelectorAll('module[visible=""]').length;
 		if(numModules == numVisibleModules){
-			for(var i = 0; i < modularjs.doOnceLoaded.length; i++){
-				modularjs.doOnceLoaded[i]();
-				modularjs.doOnceLoaded.splice(i, 1);
+			var func = modularjs.doOnceLoaded.shift();
+			while(func){
+				func();
+				func = modularjs.doOnceLoaded.shift();
 			}
 		}
 		modularjs.main();
