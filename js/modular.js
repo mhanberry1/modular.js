@@ -796,7 +796,7 @@ function applyPolyfills(){
 	if(!Array.prototype.includes){
 		 //or use Object.defineProperty
 		 Array.prototype.includes = function(search){
-			return !!~this.indexOf(search);
+			return this.indexOf(search);
 		}
 	}
 }
