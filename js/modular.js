@@ -405,7 +405,6 @@ var modularjs = {
 					if(functionNames != null){
 						functionSrc += "\n" + returnLocalFunctions(functionNames);
 					}
-					eval("function test(module, document){" + functionSrc + "}");
 					var moduleFunc = new Function("module", "document", functionSrc);
 					var localFunctions = moduleFunc(module, shadowDocument);
 					
