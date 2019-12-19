@@ -64,8 +64,8 @@ var modularjs = {
 			destination.appendChild(clone);
 		}
 
-		// If the style has not been applied,re-enable the source's mutations observer and return
-		if(!shadowModule.hasAttribute("appliedStyle")){
+		// If the style or scripts have not been applied,re-enable the source's mutations observer and return
+		if(!shadowModule.hasAttribute("appliedStyle") || !shadowModule.hasAttribute("appliedScripts")){
 			shadowModule.mutationObserver.observe(source, modularjs.mutationObserverConfig);
 			return;
 		}
@@ -188,26 +188,26 @@ var modularjs = {
 
 			// Render the specified module to the page using the supplied modularJSON and html as parameters
 			function renderModule(module, modularJSON, html){
-						moduleNumber = Object.keys(modularjs.shadowModules).length;
-						module.id = "module" + moduleNumber;
-						var moduleName = module.getAttribute("name");
-						var shadowModule = document.createElement("module");
-						shadowModule.id = module.id;
-						shadowModule.setAttribute("name", moduleName);
-						shadowModule.innerHTML = injectModularJSON(
-							adjustPaths(html, moduleName),
-							modularJSON
-						);
-						applyScripts(shadowModule, module, modularJSON);
-						applyStyle(shadowModule, modularJSON);
-						modularjs.shadowModules[module.id] = shadowModule;
+				moduleNumber = Object.keys(modularjs.shadowModules).length;
+				module.id = "module" + moduleNumber;
+				var moduleName = module.getAttribute("name");
+				var shadowModule = document.createElement("module");
+				shadowModule.id = module.id;
+				shadowModule.setAttribute("name", moduleName);
+				shadowModule.innerHTML = injectModularJSON(
+					adjustPaths(html, moduleName),
+					modularJSON
+				);
+				applyScripts(shadowModule, module, modularJSON);
+				applyStyle(shadowModule, modularJSON);
+				modularjs.shadowModules[module.id] = shadowModule;
 
-						// Invoke modularjs.main to take care of nested modules
-						modularjs.main();
-						applyMutationObserver(shadowModule, module);
+				// Invoke modularjs.main to take care of nested modules
+				modularjs.main();
+				applyMutationObserver(shadowModule, module);
 
-						// Sync the module with its shadow
-						modularjs.syncModules(module, "fromShadow");
+				// Sync the module with its shadow
+				modularjs.syncModules(module, "fromShadow");
 			}
 
 			// Process the code once it has been retrieved
@@ -538,6 +538,11 @@ var modularjs = {
 								);
 								cache[this.index] = this.responseText;
 								constructFunc();
+
+								// If all scripts have been processed, set the appliedScripts attribute
+								if(typeof(functionSrc) == "string"){
+									shadowModule.setAttribute("appliedScripts", "");
+								}
 							
 							// Else, show an alert and throw an error
 							}else{
@@ -553,6 +558,11 @@ var modularjs = {
 				}
 				scripts[0].parentNode.removeChild(scripts[0]);
 				srcIndex++;
+			}
+
+			// If all scripts have been processed, set the appliedScripts attribute
+			if(typeof(functionSrc) == "string"){
+				shadowModule.setAttribute("appliedScripts", "");
 			}
 		}
 
