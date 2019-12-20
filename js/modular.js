@@ -120,6 +120,21 @@ var modularjs = {
 	"shadowModules" : {},
 	"functions" : {},
 	"cache" : {},
+	"storeCache" : function(){
+		var xhttp = new XMLHttpRequest();
+		xhttp.onreadystatechange = function(){
+			if(this.readyState == 4 && this.status == 200){
+				var modularjsSource = this.responseText;
+				modularjsSource = modularjsSource.replace(/"cache" : {}/, '"cache" : ' + JSON.stringify(modularjs.cache));
+				console.log(modularjsSource);
+			}else if(this.readyState == 4){
+				alert("Error compiling cache");
+				throw this.responseText;
+			}
+		}
+		xhttp.open("GET", "/js/modular.js", true);
+		xhttp.send();
+	},
 	"doOnceLoaded" : [],
 	"setup" : function(){
 		var globalStyle = document.head.getElementsByTagName("style")[0];
@@ -561,7 +576,7 @@ var modularjs = {
 			}
 
 			// If all scripts have been processed, set the appliedScripts attribute
-			if(typeof(functionSrc) == "string"){
+			if(typeof(functionSrc) == "string" || functionSrc.length == 0){
 				shadowModule.setAttribute("appliedScripts", "");
 			}
 		}
