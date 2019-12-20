@@ -128,7 +128,7 @@ var modularjs = {
 				modularjsSource = modularjsSource.replace(/"cache" : {}/, '"cache" : ' + JSON.stringify(modularjs.cache));
 				
 				// Download the modularjs source packaged with the cache
-				var blob = new Blob([modularjsSource], {"type" : "octet/stream"});
+				var blob = new Blob([modularjsSource], {"type" : "application/javascript"});
 				var url = window.URL.createObjectURL(blob);
 				var downloadLink = document.createElement("a");
 				downloadLink.style = "display: none";
