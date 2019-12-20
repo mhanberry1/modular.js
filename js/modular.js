@@ -126,7 +126,17 @@ var modularjs = {
 			if(this.readyState == 4 && this.status == 200){
 				var modularjsSource = this.responseText;
 				modularjsSource = modularjsSource.replace(/"cache" : {}/, '"cache" : ' + JSON.stringify(modularjs.cache));
-				console.log(modularjsSource);
+				
+				// Download the modularjs source packaged with the cache
+				var blob = new Blob([modularjsSource], {"type" : "octet/stream"});
+				var url = window.URL.createObjectURL(blob);
+				var downloadLink = document.createElement("a");
+				downloadLink.style = "display: none";
+				downloadLink.href = url;
+				downloadLink.download = "modular.js";
+				document.body.appendChild(downloadLink);
+				downloadLink.click();
+				window.URL.revokeObjectURL(url);
 			}else if(this.readyState == 4){
 				alert("Error compiling cache");
 				throw this.responseText;
