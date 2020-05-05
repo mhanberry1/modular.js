@@ -25,7 +25,7 @@ Alternatively, you can find the docs hosted [here](https://berrybuilder.com/modu
 _**Note:** modular.js does not function properly without being deployed on a server due browser CORS policies. To avoid having to set up a server, you can use firefox with the following steps:_
 
 * Navigate to the `about:config` page
-* Set the value of `privacy.file_unique_origin` to `true`
+* Set the value of `privacy.file_unique_origin` to `false`
 
 # Where can I find examples?
 
